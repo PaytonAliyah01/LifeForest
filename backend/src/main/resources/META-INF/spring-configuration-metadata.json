@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "name": "jwt",
+      "type": "com.lifeforest.backend.common.security.JwtProperties",
+      "sourceType": "com.lifeforest.backend.common.security.JwtProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.lifeforest.backend.common.security.JwtProperties"
+    },
+    {
+      "name": "jwt.expiration-ms",
+      "type": "java.lang.Long",
+      "sourceType": "com.lifeforest.backend.common.security.JwtProperties"
+    }
+  ]
+}

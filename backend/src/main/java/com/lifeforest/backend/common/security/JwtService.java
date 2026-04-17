@@ -7,21 +7,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final JwtProperties jwtProperties;
 
-    @Value("${jwt.expiration-ms}")
-    private long jwtExpirationMs;
+    public JwtService(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
 
     public  String generateToken(String subject, Map<String, Object> extraClaims) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + jwtExpirationMs);
+        Date expiry = new Date(now.getTime() + jwtProperties.expirationMs());
 
         return Jwts.builder()
             .claims(extraClaims)
@@ -54,7 +53,7 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = jwtProperties.secret().getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

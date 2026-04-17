@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.lifeforest.backend.user.domain.User;
@@ -198,8 +197,9 @@ class UserServiceTest {
     @Test
     void updateThrowsWhenUserDoesNotExist() {
         when(userRepository.findById(77L)).thenReturn(Optional.empty());
+        UserUpdateRequestDto dto = new UserUpdateRequestDto("Name");
 
-        assertThrows(UserNotFoundException.class, () -> userService.update(77L, new UserUpdateRequestDto("Name")));
+        assertThrows(UserNotFoundException.class, () -> userService.update(77L, dto));
 
         verify(userRepository).findById(77L);
         verify(userRepository, never()).save(any());
