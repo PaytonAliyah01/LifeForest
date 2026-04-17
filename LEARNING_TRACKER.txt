@@ -1,62 +1,113 @@
-LifeForest Backend Learning Tracker
+LifeForest Learning Tracker
 Last updated: 2026-04-17
 
 How to use this file
-- This is your personal progress log for learning backend development.
-- We will keep updating it after each milestone.
-- Mark checkboxes when you complete steps.
-- Add your own notes under "My Notes".
+- This is a full project progress log.
+- Keep appending updates after each milestone.
+- Keep checkbox state current.
 
 ==================================================
-What I Learned So Far (Beginner Version)
+1) Timeline View
 ==================================================
 
-1) Package structure
-- I created a dedicated user feature area under:
-  backend/src/main/java/com/lifeforest/backend/user
-- This keeps user-related code grouped together and easier to understand.
+Phase A: Backend foundation
+- Created user feature package structure.
+- Added UserRole enum and User entity.
+- Added UserRepository with findByEmail and existsByEmail.
+- Added request/response DTOs and UserMapper.
+- Added service and controller layers.
+- Added custom exceptions and GlobalExceptionHandler.
+- Added validation and persistence flow.
 
-2) Enum (UserRole)
-- File: user/domain/UserRole.java
-- Purpose: define allowed user roles (USER, ADMIN).
-- Why: avoid random strings and typos for role values.
+Phase B: Testing and API verification
+- Added unit tests for UserService and UserController.
+- Added edge-case tests for email normalization and display-name trimming.
+- Fixed test datasource setup and verified backend test execution.
+- Completed Postman cycle for create/get/update, duplicate email, validation, and not-found cases.
 
-3) Entity (User)
-- File: user/domain/User.java
-- Purpose: blueprint for how a user is stored in the database.
-- Includes: id, email, passwordHash, displayName, role, createdAt, updatedAt.
-- Why: this is the core database model.
+Phase C: Authentication
+- Added JWT dependencies and jwt config.
+- Implemented AuthService/AuthController with /api/auth/login.
+- Added 401 invalid-credentials handling.
+- Connected frontend login/register to backend.
+- Saved JWT token in AsyncStorage via saveToken.
 
-4) Repository (UserRepository)
-- File: user/repository/UserRepository.java
-- Purpose: read and write User data using Spring Data JPA.
-- Methods added: findByEmail, existsByEmail.
-- Why: needed to prevent duplicate emails and fetch users.
+Phase D: Frontend UX and routing
+- Added custom welcome startup screen.
+- Set app to open the custom welcome route first.
+- Added Login/Register navigation from welcome screen.
+- Added responsive behavior for welcome, login, and home screens.
+- Fixed waving-hand animation for native rendering.
 
-5) Request DTOs
-- Files:
-  user/dto/request/UserCreateRequestDto.java
-  user/dto/request/UserUpdateRequestDto.java
-- Purpose: define what API input should look like.
-- Why: protect app from bad input and keep validation rules clear.
+Phase E: Tooling, CI, and quality
+- Upgraded Expo SDK 54 to 55.
+- Fixed TypeScript config/declaration issues and JSX resolution errors.
+- Added CI jobs for backend test, frontend lint, and frontend type-check.
+- Added CI concurrency cancellation.
+- Updated GitHub Actions major versions and frontend Node runtime.
+- Synced package-lock.json with package.json for stable npm ci.
 
-6) Response DTO
-- File: user/dto/response/UserResponseDto.java
-- Purpose: define what API sends back.
-- Why: send only safe fields (never send password or passwordHash).
-
-7) Mapper (UserMapper)
-- File: user/mapper/UserMapper.java
-- Purpose: translate between DTOs and Entity.
-- Why: keeps conversion logic in one place and avoids duplicated code.
-
-8) Build/test checks
-- compileJava: checks if source code compiles.
-- test: runs tests.
-- Note: tests originally failed due to missing test datasource; fixed by adding H2 test setup.
+Phase F: Security and hardening
+- Removed hardcoded secrets from backend config files.
+- Moved DB and JWT values to env placeholders.
+- Added typed JwtProperties and config metadata.
+- Refactored JwtService to typed property binding.
+- Cleaned Sonar quality issues in tests.
+- Upgraded Spring Boot plugin to supported patch line.
 
 ==================================================
-Progress Checklist
+2) Feature View
+==================================================
+
+Backend features
+[x] User domain model, repository, service, controller
+[x] Validation and exception handling
+[x] Registration endpoint
+[x] JWT login endpoint
+[x] Password hashing via security config
+[x] Unit tests and edge-case tests
+
+Frontend features
+[x] Registration screen
+[x] Login screen
+[x] Token storage in AsyncStorage
+[x] Custom startup welcome screen
+[x] Navigation to login/register
+[x] Responsive layout updates
+[x] Home screen backend-message fetch
+
+DevOps and tooling features
+[x] CI workflow for backend/frontend checks
+[x] CI concurrency cancellation
+[x] Action/runtime compatibility updates
+[x] Lockfile/package sync for npm ci
+[x] TypeScript/Expo compatibility fixes
+
+Security features
+[x] Removed committed hardcoded secrets
+[x] Environment-variable config placeholders
+[x] Typed JWT configuration binding
+[x] Config metadata support for jwt keys
+
+==================================================
+3) Troubleshooting View
+==================================================
+
+Issues solved
+- 405 on GET user endpoint traced to missing GET mapping and fixed.
+- bootRun failure traced to missing main datasource config.
+- TypeScript "--jsx not set" and module declaration issues fixed via tsconfig/dependency updates.
+- Expo default startup screen issue fixed by root-route configuration.
+- npm ci lock mismatch fixed by manifest and lockfile synchronization.
+- Sonar warnings fixed for hardcoded secrets and test quality issues.
+
+Important lessons learned
+- Postman path vars must resolve to real values, not literal placeholders.
+- Local Windows EPERM unlink errors during npm ci can be caused by locked native files.
+- Stale IDE diagnostics can remain after fixes and may require language-server/project reload.
+
+==================================================
+4) Checklist Snapshot
 ==================================================
 
 Completed foundation
@@ -71,7 +122,7 @@ Completed foundation
 [x] compileJava passes
 [x] test passes
 
-Next learning milestones
+Milestones
 [x] Create custom exceptions
 [x] Create UserService (business logic)
 [x] Create SecurityConfig with PasswordEncoder bean
@@ -83,39 +134,8 @@ Next learning milestones
 [x] Add more edge-case unit tests
 [x] Input validation
 [x] Save user to database
-[ ] Implement JWT authentication
+[x] Implement JWT authentication
 [x] Create registration screen
 [x] Improve CI pipeline
 [x] Implement login screen
-[ ] Store JWT token in AsyncStorage
-
-- Started next user story: implement JWT authentication for login flow.
-- Added GlobalExceptionHandler to return clean 404, 409, and 400 validation responses.
-- Learned the user is saved to the database in UserService.register by calling userRepository.save(user).
-- Learned the frontend API client already points to /api, so the registration screen should call /users on that client.
-- Registration screen implementation started in frontend/app/register.tsx.
-- Verified the registration screen with frontend lint: npm run lint passed.
-- CI workflow now includes backend tests, frontend lint, and frontend type check.
-- Verified CI-equivalent commands locally: backend gradlew test passed, frontend npm run lint passed, frontend npx tsc --noEmit passed.
-- Added CI concurrency cancellation so older runs on the same branch are auto-cancelled when new commits are pushed.
-- Learned why bootRun failed: main runtime datasource was missing in main application.properties (test datasource does not apply to normal app run).
-- Verified backend runtime: java process is listening on port 8080.
-- Learned 405 on GET /api/users/{id} means endpoint path exists but GET method mapping was missing in UserController.
-- UserController currently has POST and PUT; need to add GET /api/users/{id} to finish controller endpoints milestone.
-- Learned Postman path variables must contain a real number or a saved collection variable value, not the literal text {{userId}}.
-- Verified create, get, and update requests in Postman when using a real numeric user id.
-- Completed Postman API test cycle with expected results for create, get, update, duplicate email, validation, and not found cases.
-- Learned unit tests can be written with small fake implementations instead of a full Spring context.
-- Created first UserService unit test class with success and error cases for register, getById, and update.
-- Created controller unit tests as pure unit tests by calling controller methods directly with a mocked service.
-- Added an edge-case service test to verify display names are trimmed before saving.
-- Added an edge-case service test to verify register trims and lowercases email before saving.
-- JWT step 1 complete: added jjwt dependencies and jwt secret/expiration config in application.yml.
-- JWT step 2 complete: created JwtService and fixed property binding/field naming so compile passes.
-- JWT step 3 complete: added auth DTOs, AuthService, AuthController (/api/auth/login), and 401 handling for invalid credentials.
-- Started frontend auth subtask: store JWT token in AsyncStorage after login.
-- Started frontend auth subtask: implement login screen connected to /api/auth/login.
-- Login screen lint check passed (expo lint) and login screen implementation is complete.
-- Upgraded frontend from Expo SDK 54 to SDK 55 using expo install expo@^55.0.0 --fix.
-- Fixed SDK 55 TypeScript compatibility issues in theme indexing and icon prop typings.
-- Verified post-upgrade frontend checks: npm run lint passed and npx tsc --noEmit passed.
+[x] Store JWT token in AsyncStorage
