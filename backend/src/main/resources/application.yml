@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lifeforest
+    username: postgres
+    password: lifeforest123
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
