@@ -1,0 +1,142 @@
+LifeForest Backend Learning Tracker
+Last updated: 2026-04-10
+
+How to use this file
+- This is your personal progress log for learning backend development.
+- We will keep updating it after each milestone.
+- Mark checkboxes when you complete steps.
+- Add your own notes under "My Notes".
+
+==================================================
+What I Learned So Far (Beginner Version)
+==================================================
+
+1) Package structure
+- I created a dedicated user feature area under:
+  backend/src/main/java/com/lifeforest/backend/user
+- This keeps user-related code grouped together and easier to understand.
+
+2) Enum (UserRole)
+- File: user/domain/UserRole.java
+- Purpose: define allowed user roles (USER, ADMIN).
+- Why: avoid random strings and typos for role values.
+
+3) Entity (User)
+- File: user/domain/User.java
+- Purpose: blueprint for how a user is stored in the database.
+- Includes: id, email, passwordHash, displayName, role, createdAt, updatedAt.
+- Why: this is the core database model.
+
+4) Repository (UserRepository)
+- File: user/repository/UserRepository.java
+- Purpose: read and write User data using Spring Data JPA.
+- Methods added: findByEmail, existsByEmail.
+- Why: needed to prevent duplicate emails and fetch users.
+
+5) Request DTOs
+- Files:
+  user/dto/request/UserCreateRequestDto.java
+  user/dto/request/UserUpdateRequestDto.java
+- Purpose: define what API input should look like.
+- Why: protect app from bad input and keep validation rules clear.
+
+6) Response DTO
+- File: user/dto/response/UserResponseDto.java
+- Purpose: define what API sends back.
+- Why: send only safe fields (never send password or passwordHash).
+
+7) Mapper (UserMapper)
+- File: user/mapper/UserMapper.java
+- Purpose: translate between DTOs and Entity.
+- Why: keeps conversion logic in one place and avoids duplicated code.
+
+8) Build/test checks
+- compileJava: checks if source code compiles.
+- test: runs tests.
+- Note: tests originally failed due to missing test datasource; fixed by adding H2 test setup.
+
+==================================================
+Progress Checklist
+==================================================
+
+Completed foundation
+[x] Created user package structure
+[x] Created UserRole enum
+[x] Created User entity
+[x] Created UserRepository
+[x] Created UserCreateRequestDto
+[x] Created UserUpdateRequestDto
+[x] Created UserResponseDto
+[x] Created UserMapper
+[x] compileJava passes
+[x] test passes
+
+Next learning milestones
+[x] Create custom exceptions
+[x] Create UserService (business logic)
+[x] Create SecurityConfig with PasswordEncoder bean
+[x] Create UserController endpoints
+[x] Create GlobalExceptionHandler
+[x] Run API manually and test with Postman
+[x] Create UserService unit tests
+[x] Create controller unit tests
+[x] Add more edge-case unit tests
+[x] Input validation
+[x] Save user to database
+[x] Create registration screen
+[x] Improve CI pipeline
+
+==================================================
+Commands I Should Remember
+==================================================
+
+From backend folder:
+- .\gradlew.bat compileJava
+- .\gradlew.bat test
+- .\gradlew.bat bootRun
+
+==================================================
+Current Architecture Flow (Simple)
+==================================================
+
+Input JSON -> Request DTO -> Mapper -> Entity -> Repository (DB save/read)
+Entity -> Mapper -> Response DTO -> Output JSON
+
+==================================================
+My Notes
+==================================================
+
+- Completed first custom exception: UserNotFoundException.
+- Completed second custom exception: EmailAlreadyExistsException.
+- Created UserService skeleton with injected dependencies.
+- Added UserService.register with email duplicate check and password encoding.
+- Added UserService.getById and UserService.update with not-found handling.
+- Added SecurityConfig with PasswordEncoder bean and permissive dev security chain.
+- Learned password hashing happens during registration with PasswordEncoder before saving the user.
+- Learned @RestController: class handles HTTP requests and returns JSON response bodies.
+- Learned @RequestMapping("/api/users"): base path prefix for all endpoints in UserController.
+- Learned @GetMapping/@PostMapping/@PutMapping: map methods to HTTP verbs and endpoint paths.
+- Learned @PathVariable Long id: reads route value from URL (example: /api/users/1 -> id=1).
+- Learned @RequestBody: maps incoming JSON body to DTO object.
+- Learned @Valid: runs DTO validation annotations before service method executes.
+- Learned input validation is handled in request DTOs with annotations like @NotBlank, @Email, and @Size, then activated in the controller with @Valid.
+- Added GlobalExceptionHandler to return clean 404, 409, and 400 validation responses.
+- Learned the user is saved to the database in UserService.register by calling userRepository.save(user).
+- Learned the frontend API client already points to /api, so the registration screen should call /users on that client.
+- Registration screen implementation started in frontend/app/register.tsx.
+- Verified the registration screen with frontend lint: npm run lint passed.
+- CI workflow now includes backend tests, frontend lint, and frontend type check.
+- Verified CI-equivalent commands locally: backend gradlew test passed, frontend npm run lint passed, frontend npx tsc --noEmit passed.
+- Added CI concurrency cancellation so older runs on the same branch are auto-cancelled when new commits are pushed.
+- Learned why bootRun failed: main runtime datasource was missing in main application.properties (test datasource does not apply to normal app run).
+- Verified backend runtime: java process is listening on port 8080.
+- Learned 405 on GET /api/users/{id} means endpoint path exists but GET method mapping was missing in UserController.
+- UserController currently has POST and PUT; need to add GET /api/users/{id} to finish controller endpoints milestone.
+- Learned Postman path variables must contain a real number or a saved collection variable value, not the literal text {{userId}}.
+- Verified create, get, and update requests in Postman when using a real numeric user id.
+- Completed Postman API test cycle with expected results for create, get, update, duplicate email, validation, and not found cases.
+- Learned unit tests can be written with small fake implementations instead of a full Spring context.
+- Created first UserService unit test class with success and error cases for register, getById, and update.
+- Created controller unit tests as pure unit tests by calling controller methods directly with a mocked service.
+- Added an edge-case service test to verify display names are trimmed before saving.
+- Added an edge-case service test to verify register trims and lowercases email before saving.

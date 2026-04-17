@@ -1,0 +1,16 @@
+$kind: http-request
+name: http://localhost:8080/api/users
+url: http://localhost:8080/api/users/999999
+method: GET
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"\",\r
+
+    \  \"password\": \"123\",\r
+
+    \  \"displayName\": \"\"\r
+
+    }"
+order: 4393353131064138
