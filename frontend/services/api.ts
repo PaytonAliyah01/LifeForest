@@ -1,6 +1,7 @@
 // services/api.ts
 import axios from "axios";
 import { Platform } from "react-native";
+import { getToken } from '@/services/authStorage';
 
 // Replace this with your computer's LAN IP if testing on a real device
 const PC_LAN_IP = "192.168.1.100";
@@ -26,3 +27,15 @@ export const api = axios.create({
   baseURL: getBackendURL(),
   timeout: 5000,
 });
+
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);

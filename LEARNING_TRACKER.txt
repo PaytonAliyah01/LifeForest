@@ -1,5 +1,5 @@
 LifeForest Backend Learning Tracker
-Last updated: 2026-04-10
+Last updated: 2026-04-17
 
 How to use this file
 - This is your personal progress log for learning backend development.
@@ -83,43 +83,13 @@ Next learning milestones
 [x] Add more edge-case unit tests
 [x] Input validation
 [x] Save user to database
+[ ] Implement JWT authentication
 [x] Create registration screen
 [x] Improve CI pipeline
+[x] Implement login screen
+[ ] Store JWT token in AsyncStorage
 
-==================================================
-Commands I Should Remember
-==================================================
-
-From backend folder:
-- .\gradlew.bat compileJava
-- .\gradlew.bat test
-- .\gradlew.bat bootRun
-
-==================================================
-Current Architecture Flow (Simple)
-==================================================
-
-Input JSON -> Request DTO -> Mapper -> Entity -> Repository (DB save/read)
-Entity -> Mapper -> Response DTO -> Output JSON
-
-==================================================
-My Notes
-==================================================
-
-- Completed first custom exception: UserNotFoundException.
-- Completed second custom exception: EmailAlreadyExistsException.
-- Created UserService skeleton with injected dependencies.
-- Added UserService.register with email duplicate check and password encoding.
-- Added UserService.getById and UserService.update with not-found handling.
-- Added SecurityConfig with PasswordEncoder bean and permissive dev security chain.
-- Learned password hashing happens during registration with PasswordEncoder before saving the user.
-- Learned @RestController: class handles HTTP requests and returns JSON response bodies.
-- Learned @RequestMapping("/api/users"): base path prefix for all endpoints in UserController.
-- Learned @GetMapping/@PostMapping/@PutMapping: map methods to HTTP verbs and endpoint paths.
-- Learned @PathVariable Long id: reads route value from URL (example: /api/users/1 -> id=1).
-- Learned @RequestBody: maps incoming JSON body to DTO object.
-- Learned @Valid: runs DTO validation annotations before service method executes.
-- Learned input validation is handled in request DTOs with annotations like @NotBlank, @Email, and @Size, then activated in the controller with @Valid.
+- Started next user story: implement JWT authentication for login flow.
 - Added GlobalExceptionHandler to return clean 404, 409, and 400 validation responses.
 - Learned the user is saved to the database in UserService.register by calling userRepository.save(user).
 - Learned the frontend API client already points to /api, so the registration screen should call /users on that client.
@@ -140,3 +110,12 @@ My Notes
 - Created controller unit tests as pure unit tests by calling controller methods directly with a mocked service.
 - Added an edge-case service test to verify display names are trimmed before saving.
 - Added an edge-case service test to verify register trims and lowercases email before saving.
+- JWT step 1 complete: added jjwt dependencies and jwt secret/expiration config in application.yml.
+- JWT step 2 complete: created JwtService and fixed property binding/field naming so compile passes.
+- JWT step 3 complete: added auth DTOs, AuthService, AuthController (/api/auth/login), and 401 handling for invalid credentials.
+- Started frontend auth subtask: store JWT token in AsyncStorage after login.
+- Started frontend auth subtask: implement login screen connected to /api/auth/login.
+- Login screen lint check passed (expo lint) and login screen implementation is complete.
+- Upgraded frontend from Expo SDK 54 to SDK 55 using expo install expo@^55.0.0 --fix.
+- Fixed SDK 55 TypeScript compatibility issues in theme indexing and icon prop typings.
+- Verified post-upgrade frontend checks: npm run lint passed and npx tsc --noEmit passed.

@@ -1,6 +1,6 @@
 // app/(tabs)/index.tsx
 import { Image } from 'expo-image';
-import { Platform, StyleSheet, ActivityIndicator } from 'react-native';
+import { Platform, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 
 import { HelloWave } from '@/components/hello-wave';
@@ -11,9 +11,15 @@ import { api } from '@/services/api';
 import { isAxiosError } from 'axios';
 
 export default function HomeScreen() {
+  const { width } = useWindowDimensions();
   const [message, setMessage] = useState<string>('');        // backend message
   const [loading, setLoading] = useState<boolean>(true);     // loading indicator
   const [error, setError] = useState<string>('');           // error message
+
+  const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
+  const contentMaxWidth = width < 768 ? width - horizontalPadding * 2 : 860;
+  const logoWidth = Math.min(Math.max(width * 0.65, 180), 290);
+  const logoHeight = Math.round((178 / 290) * logoWidth);
 
   useEffect(() => {
     const fetchMessage = async () => {
@@ -41,10 +47,25 @@ export default function HomeScreen() {
       headerImage={
         <Image
           source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          style={[
+            styles.reactLogo,
+            {
+              width: logoWidth,
+              height: logoHeight,
+            },
+          ]}
         />
       }
     >
+      <ThemedView
+        style={[
+          styles.content,
+          {
+            paddingHorizontal: horizontalPadding,
+            maxWidth: contentMaxWidth,
+          },
+        ]}
+      >
       {/* Title */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome to LifeForest!</ThemedText>
@@ -81,6 +102,7 @@ export default function HomeScreen() {
           to open developer tools.
         </ThemedText>
       </ThemedView>
+      </ThemedView>
 
       {/* Add more steps or other content here */}
     </ParallaxScrollView>
@@ -88,6 +110,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  content: {
+    width: '100%',
+    alignSelf: 'center',
+  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -98,8 +124,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reactLogo: {
-    height: 178,
-    width: 290,
     bottom: 0,
     left: 0,
     position: 'absolute',
