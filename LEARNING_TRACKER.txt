@@ -1,5 +1,5 @@
 LifeForest Learning Tracker
-Last updated: 2026-04-17
+Last updated: 2026-04-24
 
 How to use this file
 - This is a full project progress log.
@@ -55,6 +55,16 @@ Phase F: Security and hardening
 - Cleaned Sonar quality issues in tests.
 - Upgraded Spring Boot plugin to supported patch line.
 
+Phase G: Docker and deployment setup
+- Added dedicated Dockerfiles for backend and frontend.
+- Fixed backend bootJar packaging by excluding duplicate metadata files.
+- Added Docker Compose for db, backend, and frontend startup.
+- Switched the frontend container to Expo LAN mode for mobile device testing.
+- Replaced hardcoded frontend API URLs with an env-driven base URL.
+- Added .env.example and expanded the README for beginner-friendly setup.
+- Verified local Docker builds and runtime startup for both apps.
+- Reduced Docker image vulnerability warnings by changing base images and hardening package layers.
+
 ==================================================
 2) Feature View
 ==================================================
@@ -82,6 +92,10 @@ DevOps and tooling features
 [x] Action/runtime compatibility updates
 [x] Lockfile/package sync for npm ci
 [x] TypeScript/Expo compatibility fixes
+[x] Dockerfiles for backend and frontend
+[x] Docker Compose startup for db/backend/frontend
+[x] Environment-driven frontend API configuration
+[x] Beginner-friendly Docker and setup documentation
 
 Security features
 [x] Removed committed hardcoded secrets
@@ -100,11 +114,19 @@ Issues solved
 - Expo default startup screen issue fixed by root-route configuration.
 - npm ci lock mismatch fixed by manifest and lockfile synchronization.
 - Sonar warnings fixed for hardcoded secrets and test quality issues.
+- Docker build failures traced to duplicate Spring Boot metadata and fixed in build.gradle.
+- Backend startup failure traced to PostgreSQL password mismatch and fixed with matching container env values.
+- Expo runtime mismatch traced to react-native-worklets version drift and fixed by aligning the dependency.
+- Docker DX vulnerability warnings reduced by changing and hardening container base images.
+- Editor diagnostics on node_modules and Dockerfiles were cleaned up by adjusting workspace settings and image choices.
 
 Important lessons learned
 - Postman path vars must resolve to real values, not literal placeholders.
 - Local Windows EPERM unlink errors during npm ci can be caused by locked native files.
 - Stale IDE diagnostics can remain after fixes and may require language-server/project reload.
+- Docker scanner warnings often come from the base image, so the official tag choice matters more than app code in those cases.
+- Expo containers work best when the API base URL and LAN host settings are environment-driven instead of hardcoded.
+- Beginner-friendly deployment docs help when the same project needs to run locally, in Docker, and on a VM.
 
 ==================================================
 4) Checklist Snapshot
@@ -139,3 +161,172 @@ Milestones
 [x] Improve CI pipeline
 [x] Implement login screen
 [x] Store JWT token in AsyncStorage
+[x] Containerize backend and frontend
+[x] Add Docker Compose orchestration
+[x] Add environment example and deployment docs
+
+==================================================
+5) Technical Concepts Explained
+==================================================
+
+BACKEND CONCEPTS
+================
+
+Entity
+- What: A class that represents a database table.
+- Example: User.java maps to a "users" table in PostgreSQL.
+- Why: Provides an object-oriented way to work with database rows.
+- How used: @Entity annotation tells Spring this is a JPA entity.
+- Key fields: id (primary key), email, passwordHash, displayName, role, createdAt, updatedAt.
+
+Repository
+- What: An interface that handles all read/write operations for an entity.
+- Example: UserRepository extends JpaRepository<User, Long> (Long is the id type).
+- Why: Abstracts database queries so you don't write raw SQL.
+- Methods: save(), findById(), existsByEmail(), etc. (many are auto-generated).
+- How used: Injected into service layer via @Autowired or constructor injection.
+
+Spring Data JPA with Hibernate
+- What: A persistence approach where entity models and repositories drive standard database access.
+- Effect: Standard CRUD operations do not need raw SQL because Hibernate generates the queries for me.
+- Why: Improves development speed, reduces boilerplate code, and keeps the project aligned with a clean layered architecture.
+- Flexibility: I can still use custom SQL or JPQL queries when a more complex operation needs it.
+
+DTO (Data Transfer Object)
+- What: A simple class that carries data between frontend and backend, or layer to layer.
+- Examples: UserCreateRequestDto (input), UserResponseDto (output).
+- Why: Security (don't expose internal fields like passwordHash), validation, and loose coupling.
+- Request DTOs: Define what the API accepts (validate and sanitize input).
+- Response DTOs: Define what the API returns (only safe fields, never passwords).
+
+Mapper
+- What: A class that converts between DTOs and Entities.
+- Example: UserMapper.toEntity() converts UserCreateRequestDto to User entity.
+- Why: Keeps conversion logic in one place and avoids duplication.
+- How used: Called in the service layer before saving or returning data.
+
+Service
+- What: A class that contains business logic (validation, calculations, orchestration).
+- Example: UserService handles registration, login validation, password encoding.
+- Why: Separates business logic from database access and HTTP concerns.
+- How used: Called by controllers; calls repositories and other services.
+- Annotation: @Service marks it for Spring to manage.
+
+Controller
+- What: A class that handles HTTP requests and routes them to services.
+- Example: UserController has @PostMapping("/users") for registration, @PutMapping for updates.
+- Why: Separates HTTP concerns from business logic.
+- Endpoints: POST /users (register), GET /users/{id} (get user), PUT /users/{id} (update).
+- Annotation: @RestController marks it as an HTTP endpoint handler.
+
+Bean
+- What: An object managed by Spring container (Spring creates, configures, and destroys it).
+- Example: PasswordEncoder bean in SecurityConfig lets Spring manage its lifecycle.
+- Why: Spring automatically wires beans into other beans via @Autowired, reducing boilerplate.
+- Configuration: Beans are often created in @Configuration classes or marked with @Service, @Repository, @Bean, etc.
+- Scope: Can be singleton (one instance for whole app), prototype (new for each request), etc.
+- How used: You inject beans into other beans (UserService gets PasswordEncoder injected).
+
+Exception Handling
+- What: Custom exceptions (e.g., EmailAlreadyExistsException) and a global handler.
+- GlobalExceptionHandler: @ControllerAdvice catches exceptions and returns clean HTTP responses.
+- Why: Consistent error messages, proper HTTP status codes (400, 404, 409, 401, 500).
+- Benefits: API consumers get predictable error format instead of raw stack traces.
+
+JWT (JSON Web Token)
+- What: A signed token that proves a user is logged in.
+- Structure: Header.Payload.Signature (three Base64-encoded parts).
+- Used for: Stateless authentication (no database lookup per request).
+- jjwt library: Encodes/decodes and validates JWT signatures.
+- Flow: Login endpoint creates JWT → frontend stores it → frontend sends it on future requests → server validates it.
+
+Configuration Properties
+- What: Settings loaded from application.yml or environment variables.
+- Examples: jwt.secret, jwt.expiration-ms, spring.datasource.url.
+- @ConfigurationProperties: Type-safe way to bind config to Java records/classes.
+- Why: Keeps secrets out of code and allows different configs per environment.
+- Environment variables: Used by CI/Docker to inject secrets at runtime (DB_PASSWORD, JWT_SECRET, etc.).
+
+FRONTEND CONCEPTS
+=================
+
+JSX
+- What: JavaScript syntax that lets you write HTML-like code in JS files.
+- Example: <ThemedText type="title">Welcome</ThemedText> looks like HTML but is JavaScript.
+- Why: Makes UI code more readable and maintainable than createElement() calls.
+- Compilation: JSX gets compiled to JavaScript function calls (React.createElement).
+- tsconfig jsx setting: "react-jsx" tells TypeScript how to transform JSX.
+
+TypeScript Generics
+- What: A way to write flexible, reusable code that works with multiple types.
+- Example: api.get<string>('/hello') tells TypeScript the response is a string.
+- Why: Type safety—compiler catches type errors before runtime.
+- Benefits: Autocomplete, error detection, self-documenting code.
+
+Hooks
+- What: Functions that let functional components use state, effects, and other React features.
+- Examples: useState (manage state), useEffect (run code on mount/update), useWindowDimensions (get screen size).
+- Why: Replaces class-component boilerplate with simpler function-based code.
+- Rules: Can only be called at the top level of components, never in loops/conditions.
+
+AsyncStorage
+- What: A key-value store for persisting small amounts of data on the device.
+- Used for: Storing JWT tokens so the user stays logged in after app restart.
+- saveToken/getToken functions wrap AsyncStorage for convenience.
+- Timing: Async (returns promises), so use await or .then().
+
+DTO in Frontend
+- What: The same concept as backend DTOs but for frontend-to-backend communication.
+- Example: api.post('/auth/login', { email, password }) sends a login DTO.
+- Why: Matches the shape the backend expects.
+
+Responsive Design
+- What: UI that adapts to different screen sizes (phone, tablet, computer).
+- useWindowDimensions: Hook that gives current width/height.
+- Example: Card width adjusts based on screen width using ternary logic.
+- Why: Users have different devices and should have a good experience on all of them.
+
+Environment APIs
+- What: Standard functions/libraries provided by the runtime (React Native, Expo).
+- Examples: Platform (detect iOS/Android), useWindowDimensions (screen size), Pressable (clickable area).
+- Why: Provides platform-specific or runtime-specific features without native code.
+
+DEVOPS/TOOLING CONCEPTS
+=======================
+
+CI/CD Pipeline
+- What: Automated tests and builds that run when code is pushed.
+- .github/workflows/ci.yml: Defines what to run on every push.
+- Jobs: Backend tests (gradle), frontend lint and type-check.
+- Why: Catches bugs early, ensures quality standards, prevents bad code from merging.
+
+GitHub Actions
+- What: GitHub's automation platform for running scripts on every push.
+- Versions: v4, v5 are major versions with breaking changes and dependency updates.
+- Concurrency: Cancels old runs when a new push arrives (saves time and resources).
+- Checkout/Setup actions: Prepare the environment (install Node, Java, etc.).
+
+Lock files (package-lock.json)
+- What: Records exact versions of all installed npm packages (and their dependencies).
+- npm ci: Uses lock file for reproducible installs (same versions every time).
+- npm install: Updates lock file if packages changed.
+- Why: Prevents "it works on my machine but not in CI" problems.
+
+TypeScript Config (tsconfig.json)
+- What: Settings that control TypeScript compilation behavior.
+- jsx: Tells TS how to handle JSX syntax ("react-jsx" is modern mode).
+- module: Output module format (esnext for modern JavaScript).
+- strict: Enables strict type checking (catch more errors).
+- paths: Allows "@/" shortcuts instead of "../../../" relative imports.
+
+Expo
+- What: A framework that simplifies React Native development (no native build tools needed).
+- SDK: Every few months, Expo ships a new version with dependency updates.
+- tsconfig.base.json: Expo provides default TypeScript settings.
+- Why: Faster development cycle, less build complexity than bare React Native.
+
+Spring Boot
+- What: A framework that simplifies Spring application setup.
+- Plugins: Version 3.5.x is currently supported; older versions (3.2.x) have no support.
+- Gradle: Build tool that manages dependencies and runs tests.
+- Why: Reduces boilerplate, provides auto-configuration, includes embedded server.

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../schemas/http-request.schema.json
+$kind: http-request
+name: http://145.220.72.98:8080/api/users
+url: http://145.220.72.98:8080/api/auth/login
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"test@example.com\",\r
+
+    \  \"password\": \"Password123\"\r
+
+    }"
+order: 4393353131064138
