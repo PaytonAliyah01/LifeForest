@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16
+    container_name: lifeforest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lifeforest}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifeforest123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  backend:
+    image: tiffanyphelipa/lifeforest-backend
+    container_name: lifeforest-backend
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-lifeforest}
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-lifeforest123}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: tiffanyphelipa/lifeforest-frontend
+    container_name: lifeforest-frontend
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # Set this to your public backend URL, for example: http://145.220.72.98:8080/api
+      EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:?Set EXPO_PUBLIC_API_URL in .env}
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+
+volumes:
+  db-data:
