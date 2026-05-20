@@ -13,8 +13,8 @@ services:
       - db-data:/var/lib/postgresql/data
 
   backend:
-    image: tiffanyphelipa/lifeforest-backend:latest
-    pull_policy: always
+    build:
+      context: ./backend
     restart: unless-stopped
     depends_on:
       - db
@@ -25,19 +25,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev-secret}
     ports:
       - "8080:8080"
-
-  frontend:
-    image: tiffanyphelipa/lifeforest-frontend:latest
-    pull_policy: always
-    restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:?Set EXPO_PUBLIC_API_URL in .env}
-    ports:
-      - "8081:8081"
-      - "19000:19000"
-      - "19001:19001"
 
 volumes:
   db-data:

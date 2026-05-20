@@ -1,11 +1,14 @@
-import {useState} from'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, } from 'react-native';
 import { isAxiosError } from 'axios';
 import {api} from '@/services/api';
+import { register as registerRequest } from '@/services/authApi';
 import {ThemedText} from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function RegisterScreen() {
+  const passwordInputRef = useRef<TextInput | null>(null);
+  const displayNameInputRef = useRef<TextInput | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -19,7 +22,7 @@ export default function RegisterScreen() {
     setErrorMessage('');
 
     try{
-        await api.post('/users', {
+      await registerRequest({
             email: email.trim(),
             password,
             displayName: displayName.trim(),
@@ -43,6 +46,8 @@ export default function RegisterScreen() {
             .map(([field, message]) => `${field}: ${message}`)
             .join('\n');
             setErrorMessage(fieldMessages);
+        } else if (error.response === undefined) {
+          setErrorMessage(`Could not reach the backend at ${api.defaults.baseURL ?? 'the configured API URL'}. Make sure Expo Go and your PC are on the same network, then restart Expo.`);
         } else {
             setErrorMessage(data?.error || data?.message || 'Registration failed.');
         }
@@ -56,9 +61,15 @@ export default function RegisterScreen() {
   return(
     <KeyboardAvoidingView
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={24}
     >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
+        >
                     <ThemedView style={styles.card}>
           <ThemedText type="title" style={styles.title}>
             Create account
@@ -73,25 +84,35 @@ export default function RegisterScreen() {
               placeholder="Email"
               placeholderTextColor="#7A7A7A"
               keyboardType="email-address"
+              returnKeyType="next"
               autoCapitalize="none"
               autoCorrect={false}
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              blurOnSubmit={false}
               value={email}
               onChangeText={setEmail}
             />
 
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               placeholder="Password"
               placeholderTextColor="#7A7A7A"
               secureTextEntry
+              returnKeyType="next"
+              onSubmitEditing={() => displayNameInputRef.current?.focus()}
+              blurOnSubmit={false}
               value={password}
               onChangeText={setPassword}
             />
 
             <TextInput
+              ref={displayNameInputRef}
               style={styles.input}
               placeholder="Display name"
               placeholderTextColor="#7A7A7A"
+              returnKeyType="go"
+              onSubmitEditing={() => void handleRegister()}
               value={displayName}
               onChangeText={setDisplayName}
             />
@@ -136,7 +157,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 72,
   },
   card: {
     borderRadius: 24,
@@ -172,12 +195,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#7EE081',
+    borderWidth: 1,
+    borderColor: '#A5F0AF',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
+    shadowColor: '#7EE081',
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   buttonPressed: {
     opacity: 0.85,
@@ -187,7 +217,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#102218',
+    fontSize: 16,
   },
   successText: {
     color: '#7EE081',

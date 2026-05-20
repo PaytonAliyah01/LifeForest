@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,12 +15,14 @@ import { isAxiosError } from 'axios';
 import { saveToken } from '@/services/authStorage';
 
 import { api } from '@/services/api';
+import { login as loginRequest } from '@/services/authApi';
 import { HelloWave } from '@/components/hello-wave';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function LoginScreen() {
   const { width } = useWindowDimensions();
+  const passwordInputRef = useRef<TextInput | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,23 +38,23 @@ export default function LoginScreen() {
     setErrorMessage('');
 
     try {
-    const res = await api.post('/auth/login', {
+    const res = await loginRequest({
       email: email.trim(),
       password,
     });
 
-    const token = res.data?.token;
+    const token = res.token;
     if (!token) {
       setErrorMessage('Login succeeded but no token was returned.');
       return;
     }
 
     await saveToken(token);
-    setSuccessMessage('Login successful.');
+    setSuccessMessage('Login successful. Redirecting...');
 
-    // Step for next subtask: store this token in AsyncStorage
       setEmail('');
       setPassword('');
+      router.replace('/(tabs)');
     } catch (error) {
       if (isAxiosError(error)) {
         const data = error.response?.data as
@@ -67,6 +70,8 @@ export default function LoginScreen() {
             .map(([field, message]) => `${field}: ${message}`)
             .join('\n');
           setErrorMessage(fieldMessages);
+        } else if (!error.response) {
+          setErrorMessage(`Could not reach the backend at ${api.defaults.baseURL ?? 'the configured API URL'}. Make sure Expo Go and your PC are on the same network.`);
         } else {
           setErrorMessage(data?.error || data?.message || 'Login failed.');
         }
@@ -81,10 +86,14 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={24}
     >
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
       >
         <ThemedView style={[styles.card, { maxWidth: cardMaxWidth }] }>
           <View style={styles.titleRow}>
@@ -103,17 +112,23 @@ export default function LoginScreen() {
               placeholder="Email"
               placeholderTextColor="#7A7A7A"
               keyboardType="email-address"
+              returnKeyType="next"
               autoCapitalize="none"
               autoCorrect={false}
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              blurOnSubmit={false}
               value={email}
               onChangeText={setEmail}
             />
 
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               placeholder="Password"
               placeholderTextColor="#7A7A7A"
               secureTextEntry
+              returnKeyType="go"
+              onSubmitEditing={() => void handleLogin()}
               value={password}
               onChangeText={setPassword}
             />
@@ -158,7 +173,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: 24,
+    paddingTop: 24,
+    paddingBottom: 72,
   },
   card: {
     width: '100%',
@@ -201,12 +217,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#7EE081',
+    borderWidth: 1,
+    borderColor: '#A5F0AF',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
+    shadowColor: '#7EE081',
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   buttonPressed: {
     opacity: 0.85,
@@ -216,7 +239,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#102218',
+    fontSize: 16,
   },
   successText: {
     color: '#7EE081',

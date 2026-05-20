@@ -1,112 +1,338 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { isAxiosError } from 'axios';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { clearToken, getUserIdFromToken } from '@/services/authStorage';
+import { getRoutinesByUser } from '@/services/routinesApi';
+import { getUserById, type User } from '@/services/usersApi';
 
-export default function TabTwoScreen() {
+export default function AccountScreen() {
+  const { width } = useWindowDimensions();
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [routineCount, setRoutineCount] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
+  const contentMaxWidth = width < 768 ? width - horizontalPadding * 2 : 780;
+
+  const loadAccountData = useCallback(async () => {
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const userId = await getUserIdFromToken();
+
+      if (!userId) {
+        setUser(null);
+        setRoutineCount(0);
+        setCompletedCount(0);
+        setErrorMessage('Log in to load your account details.');
+        return;
+      }
+
+      const [userResponse, routinesResponse] = await Promise.all([
+        getUserById(userId),
+        getRoutinesByUser(userId),
+      ]);
+
+      setUser(userResponse);
+      setRoutineCount(routinesResponse.length);
+      setCompletedCount(routinesResponse.filter((routine) => routine.completed).length);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        const data = error.response?.data as
+          | {
+              error?: string;
+              message?: string;
+            }
+          | undefined;
+
+        setErrorMessage(data?.error || data?.message || 'Failed to load account details.');
+      } else {
+        setErrorMessage('Failed to load account details.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAccountData();
+  }, [loadAccountData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadAccountData();
+    }, [loadAccountData]),
+  );
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+
+    try {
+      await clearToken();
+      router.replace('/login');
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+      headerBackgroundColor={{ light: '#DDEEDF', dark: '#11211A' }}
       headerImage={
         <IconSymbol
-          size={310}
-          color="#808080"
+          size={280}
+          color="#7FA08E"
           name="chevron.left.forwardslash.chevron.right"
           style={styles.headerImage}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
+      }
+    >
+      <ThemedView
+        style={[
+          styles.content,
+          {
+            paddingHorizontal: horizontalPadding,
+            maxWidth: contentMaxWidth,
+          },
+        ]}
+      >
+        <ThemedView style={styles.heroCard}>
+          <ThemedText type="title" style={styles.heroTitle}>
+            Your Account
+          </ThemedText>
+          <ThemedText style={styles.heroSubtitle}>
+            This screen is now loaded from your backend API instead of the Expo starter content.
+          </ThemedText>
+        </ThemedView>
+
+        {loading ? (
+          <ThemedView style={styles.loadingCard}>
+            <ActivityIndicator size="small" color="#4CAF50" />
+            <ThemedText style={styles.loadingText}>Loading account data...</ThemedText>
+          </ThemedView>
+        ) : null}
+
+        {!loading && errorMessage ? (
+          <ThemedView style={styles.errorCard}>
+            <ThemedText type="defaultSemiBold" style={styles.errorTitle}>
+              Couldn&apos;t load account data
             </ThemedText>
-          ),
-        })}
-      </Collapsible>
+            <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+            <Pressable style={styles.secondaryButton} onPress={() => void loadAccountData()}>
+              <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
+                Try Again
+              </ThemedText>
+            </Pressable>
+          </ThemedView>
+        ) : null}
+
+        {!loading && !errorMessage && user ? (
+          <>
+            <ThemedView style={styles.sectionCard}>
+              <ThemedText type="subtitle">Profile</ThemedText>
+
+              <View style={styles.infoRow}>
+                <ThemedText style={styles.label}>Display name</ThemedText>
+                <ThemedText type="defaultSemiBold">{user.displayName}</ThemedText>
+              </View>
+
+              <View style={styles.infoRow}>
+                <ThemedText style={styles.label}>Email</ThemedText>
+                <ThemedText>{user.email}</ThemedText>
+              </View>
+
+              <View style={styles.infoRow}>
+                <ThemedText style={styles.label}>Role</ThemedText>
+                <ThemedText>{user.role}</ThemedText>
+              </View>
+            </ThemedView>
+
+            <ThemedView style={styles.sectionCard}>
+              <ThemedText type="subtitle">Routine Summary</ThemedText>
+
+              <View style={styles.statsRow}>
+                <ThemedView style={styles.statCard}>
+                  <ThemedText type="title" style={styles.statNumber}>
+                    {routineCount}
+                  </ThemedText>
+                  <ThemedText style={styles.statLabel}>Total routines</ThemedText>
+                </ThemedView>
+
+                <ThemedView style={styles.statCard}>
+                  <ThemedText type="title" style={styles.statNumber}>
+                    {completedCount}
+                  </ThemedText>
+                  <ThemedText style={styles.statLabel}>Completed</ThemedText>
+                </ThemedView>
+              </View>
+            </ThemedView>
+
+            <ThemedView style={styles.sectionCard}>
+              <ThemedText type="subtitle">Session</ThemedText>
+              <ThemedText style={styles.sessionText}>
+                Your token is stored locally and attached automatically to API requests.
+              </ThemedText>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.logoutButton,
+                  pressed && styles.buttonPressed,
+                  loggingOut && styles.buttonDisabled,
+                ]}
+                onPress={() => void handleLogout()}
+                disabled={loggingOut}
+              >
+                {loggingOut ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <ThemedText type="defaultSemiBold" style={styles.logoutButtonText}>
+                    Log Out
+                  </ThemedText>
+                )}
+              </Pressable>
+            </ThemedView>
+          </>
+        ) : null}
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  content: {
+    width: '100%',
+    alignSelf: 'center',
+    gap: 16,
   },
-  titleContainer: {
-    flexDirection: 'row',
+  heroCard: {
+    borderRadius: 24,
+    padding: 24,
+    backgroundColor: '#14251F',
+    borderWidth: 1,
+    borderColor: '#244338',
     gap: 8,
+  },
+  heroTitle: {
+    color: '#EAF6F0',
+  },
+  heroSubtitle: {
+    color: '#B7CCC2',
+  },
+  loadingCard: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: '#14251F',
+    borderWidth: 1,
+    borderColor: '#244338',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    color: '#B7CCC2',
+  },
+  errorCard: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: '#2A1717',
+    borderWidth: 1,
+    borderColor: '#6D2B2B',
+    gap: 10,
+  },
+  errorTitle: {
+    color: '#FFD9D9',
+  },
+  errorText: {
+    color: '#FFB6B6',
+  },
+  sectionCard: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: '#14251F',
+    borderWidth: 1,
+    borderColor: '#244338',
+    gap: 12,
+  },
+  infoRow: {
+    gap: 4,
+    backgroundColor: 'transparent',
+  },
+  label: {
+    color: '#8EAA9B',
+    fontSize: 13,
+    textTransform: 'uppercase',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: 'transparent',
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: '#1B3028',
+    borderWidth: 1,
+    borderColor: '#2A4A3D',
+    gap: 6,
+  },
+  statNumber: {
+    color: '#7EE081',
+  },
+  statLabel: {
+    color: '#B7CCC2',
+  },
+  sessionText: {
+    color: '#B7CCC2',
+  },
+  secondaryButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#EAF6EE',
+    borderColor: '#1E8E3E',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  secondaryButtonText: {
+    color: '#1E8E3E',
+  },
+  logoutButton: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: '#B63E3E',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+  },
+  buttonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  headerImage: {
+    color: '#7FA08E',
+    bottom: -90,
+    left: -30,
+    position: 'absolute',
   },
 });

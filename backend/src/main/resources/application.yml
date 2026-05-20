@@ -12,5 +12,5 @@ spring:
     show-sql: true
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-key}
+  secret: ${JWT_SECRET:lifeforest-dev-jwt-secret-key-32chars}
   expiration-ms: 3600000

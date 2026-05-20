@@ -18,6 +18,11 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="create-routine" options={{ title: 'Create Routine' }} />
+        <Stack.Screen name="edit-routine" options={{ title: 'Edit Routine' }} />
+        <Stack.Screen name="add-task" options={{ title: 'Add Task' }} />
+        <Stack.Screen name="edit-task" options={{ title: 'Edit Task' }} />
+        <Stack.Screen name="focus-session" options={{ title: 'Focus Session' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>

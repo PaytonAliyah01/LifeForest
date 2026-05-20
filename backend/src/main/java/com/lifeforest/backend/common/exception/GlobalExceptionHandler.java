@@ -5,6 +5,11 @@ import com.lifeforest.backend.user.exception.UserNotFoundException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import com.lifeforest.backend.focussession.exception.FocusSessionInterruptedException;
+import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
+import com.lifeforest.backend.routine.exception.RoutineNotFoundException;
+import com.lifeforest.backend.task.exception.TaskNotFoundException;
+import com.lifeforest.backend.tree.exception.TreeNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -53,5 +58,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
     return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(RoutineNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleRoutineNotFound(RoutineNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTaskNotFound(TaskNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(FocusSessionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFocusSessionNotFound(FocusSessionNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(FocusSessionInterruptedException.class)
+    public ResponseEntity<Map<String, Object>> handleFocusSessionInterrupted(FocusSessionInterruptedException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(TreeNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTreeNotFound(TreeNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 }

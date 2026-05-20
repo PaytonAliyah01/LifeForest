@@ -1,0 +1,6 @@
+ALTER TABLE tasks
+ADD COLUMN IF NOT EXISTS category VARCHAR(30);
+
+UPDATE tasks
+SET category = 'GENERAL'
+WHERE category IS NULL;

@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">LifeForest C4 Architecture Diagram</title>
+  <desc id="desc">C4-style architecture diagram for the LifeForest project showing user, mobile app, backend API, local storage, PostgreSQL database, Docker Compose deployment, and backend components.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#334155"/>
+    </marker>
+    <marker id="arrowDashed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 42px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 20px Arial, sans-serif; fill: #475569; }
+      .section { font: 700 24px Arial, sans-serif; fill: #0f172a; }
+      .box { stroke-width: 2; rx: 14; filter: url(#shadow); }
+      .person { fill: #fff7ed; stroke: #f97316; }
+      .mobile { fill: #ecfeff; stroke: #0891b2; }
+      .storage { fill: #f0fdf4; stroke: #16a34a; }
+      .api { fill: #eef2ff; stroke: #4f46e5; }
+      .db { fill: #fdf2f8; stroke: #db2777; }
+      .deploy { fill: #f1f5f9; stroke: #64748b; }
+      .component { fill: #ffffff; stroke: #94a3b8; }
+      .componentCore { fill: #eef2ff; stroke: #6366f1; }
+      .label { font: 700 19px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 400 15px Arial, sans-serif; fill: #334155; }
+      .tiny { font: 400 13px Arial, sans-serif; fill: #64748b; }
+      .arrow { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .arrowDashed { stroke: #64748b; stroke-width: 2.5; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrowDashed); }
+      .boundary { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 18; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1120"/>
+  <text class="title" x="80" y="78">LifeForest C4 Architecture</text>
+  <text class="subtitle" x="82" y="112">Mobile-first routine, task, and focus-session platform built with Expo React Native, Spring Boot, and PostgreSQL.</text>
+
+  <text class="section" x="80" y="176">Level 1 and 2: System Context and Containers</text>
+
+  <rect class="box person" x="80" y="220" width="240" height="120"/>
+  <text class="label" x="110" y="262">LifeForest user</text>
+  <text class="small" x="110" y="292">Creates routines, tracks</text>
+  <text class="small" x="110" y="316">tasks, runs focus sessions</text>
+
+  <rect class="box mobile" x="470" y="210" width="300" height="145"/>
+  <text class="label" x="500" y="252">Mobile app</text>
+  <text class="small" x="500" y="282">Expo, React Native, TypeScript</text>
+  <text class="small" x="500" y="308">Login, routines, tasks, focus UI</text>
+  <text class="tiny" x="500" y="334">Uses Axios API client</text>
+
+  <rect class="box storage" x="470" y="410" width="300" height="112"/>
+  <text class="label" x="500" y="452">Device local storage</text>
+  <text class="small" x="500" y="482">React Native AsyncStorage</text>
+  <text class="tiny" x="500" y="506">Stores JWT access token</text>
+
+  <rect class="box api" x="940" y="210" width="320" height="145"/>
+  <text class="label" x="970" y="252">Backend API</text>
+  <text class="small" x="970" y="282">Spring Boot 3, Java 21</text>
+  <text class="small" x="970" y="308">REST endpoints and business logic</text>
+  <text class="tiny" x="970" y="334">Runs on port 8080</text>
+
+  <rect class="box db" x="940" y="410" width="320" height="112"/>
+  <text class="label" x="970" y="452">PostgreSQL database</text>
+  <text class="small" x="970" y="482">PostgreSQL 16</text>
+  <text class="tiny" x="970" y="506">Users, routines, tasks, sessions</text>
+
+  <rect class="box deploy" x="1320" y="282" width="210" height="150"/>
+  <text class="label" x="1350" y="324">Docker Compose</text>
+  <text class="small" x="1350" y="354">Starts backend</text>
+  <text class="small" x="1350" y="380">and database</text>
+  <text class="tiny" x="1350" y="406">Mobile runs via Expo</text>
+
+  <path class="arrow" d="M320 280 L470 280"/>
+  <text class="tiny" x="360" y="260">uses</text>
+
+  <path class="arrow" d="M770 280 L940 280"/>
+  <text class="tiny" x="794" y="250">HTTP JSON REST API</text>
+  <text class="tiny" x="794" y="270">Bearer JWT</text>
+
+  <path class="arrow" d="M620 355 L620 410"/>
+  <text class="tiny" x="640" y="386">reads/writes token</text>
+
+  <path class="arrow" d="M1100 355 L1100 410"/>
+  <text class="tiny" x="1120" y="386">JPA / JDBC</text>
+
+  <path class="arrowDashed" d="M1320 330 L1260 300"/>
+  <path class="arrowDashed" d="M1320 390 L1260 460"/>
+
+  <text class="section" x="80" y="610">Level 3: Backend Components</text>
+  <rect class="boundary" x="80" y="645" width="1450" height="395"/>
+  <text class="tiny" x="108" y="676">Spring Boot Backend API container</text>
+
+  <rect class="box component" x="120" y="710" width="205" height="92"/>
+  <text class="label" x="145" y="746">Controllers</text>
+  <text class="small" x="145" y="774">Auth, users, routines,</text>
+  <text class="small" x="145" y="796">tasks, focus sessions</text>
+
+  <rect class="box componentCore" x="405" y="690" width="230" height="110"/>
+  <text class="label" x="435" y="728">AuthService</text>
+  <text class="small" x="435" y="758">Validates credentials</text>
+  <text class="small" x="435" y="782">and issues JWTs</text>
+
+  <rect class="box componentCore" x="405" y="850" width="230" height="110"/>
+  <text class="label" x="435" y="888">Domain services</text>
+  <text class="small" x="435" y="918">User, routine, task,</text>
+  <text class="small" x="435" y="942">focus-session logic</text>
+
+  <rect class="box component" x="720" y="690" width="230" height="110"/>
+  <text class="label" x="750" y="728">SecurityConfig</text>
+  <text class="small" x="750" y="758">Password encoder</text>
+  <text class="small" x="750" y="782">HTTP security rules</text>
+
+  <rect class="box component" x="720" y="850" width="230" height="110"/>
+  <text class="label" x="750" y="888">JwtService</text>
+  <text class="small" x="750" y="918">Creates and validates</text>
+  <text class="small" x="750" y="942">signed JWTs</text>
+
+  <rect class="box component" x="1035" y="710" width="220" height="92"/>
+  <text class="label" x="1065" y="746">Repositories</text>
+  <text class="small" x="1065" y="774">Spring Data JPA</text>
+  <text class="tiny" x="1065" y="796">User, routine, task, session</text>
+
+  <rect class="box db" x="1320" y="710" width="170" height="92"/>
+  <text class="label" x="1350" y="746">Database</text>
+  <text class="small" x="1350" y="774">PostgreSQL</text>
+  <text class="tiny" x="1350" y="796">Persistent data</text>
+
+  <path class="arrow" d="M325 756 L405 742"/>
+  <path class="arrow" d="M325 770 L405 892"/>
+  <path class="arrow" d="M635 744 L720 744"/>
+  <path class="arrow" d="M635 900 L720 900"/>
+  <path class="arrow" d="M950 744 L1035 744"/>
+  <path class="arrow" d="M950 900 C990 900,990 790,1035 790"/>
+  <path class="arrow" d="M1255 756 L1320 756"/>
+
+  <text class="section" x="80" y="1080">Key data: User owns routines; routines contain tasks; users start focus sessions; sessions may track a task.</text>
+</svg>

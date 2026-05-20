@@ -1,0 +1,2 @@
+ALTER TABLE focus_sessions
+ADD COLUMN IF NOT EXISTS tree_type VARCHAR(40);
