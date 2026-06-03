@@ -86,5 +86,6 @@ out/
 # Misc
 # ----------------------------
 coverage/
+security-reports/
 tmp/
 temp/

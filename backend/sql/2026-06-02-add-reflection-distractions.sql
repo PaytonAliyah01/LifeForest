@@ -1,0 +1,2 @@
+ALTER TABLE reflections
+ADD COLUMN IF NOT EXISTS distractions VARCHAR(1000);

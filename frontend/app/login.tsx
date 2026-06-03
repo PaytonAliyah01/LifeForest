@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { isAxiosError } from 'axios';
-import { saveToken } from '@/services/authStorage';
+import { getUserIdFromToken, saveToken } from '@/services/authStorage';
 
 import { api } from '@/services/api';
 import { login as loginRequest } from '@/services/authApi';
@@ -31,6 +31,18 @@ export default function LoginScreen() {
 
   const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
   const cardMaxWidth = width < 768 ? width - horizontalPadding * 2 : 520;
+
+  useEffect(() => {
+    const redirectIfLoggedIn = async () => {
+      const userId = await getUserIdFromToken();
+
+      if (userId) {
+        router.replace('/(tabs)');
+      }
+    };
+
+    void redirectIfLoggedIn();
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -197,6 +209,7 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
   },
   subtitle: {

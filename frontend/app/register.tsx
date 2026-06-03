@@ -1,12 +1,15 @@
-import { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View, } from 'react-native';
 import { isAxiosError } from 'axios';
 import {api} from '@/services/api';
 import { register as registerRequest } from '@/services/authApi';
+import { getUserIdFromToken } from '@/services/authStorage';
 import {ThemedText} from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { router } from 'expo-router';
 
 export default function RegisterScreen() {
+  const { width } = useWindowDimensions();
   const passwordInputRef = useRef<TextInput | null>(null);
   const displayNameInputRef = useRef<TextInput | null>(null);
   const [email, setEmail] = useState('');
@@ -15,6 +18,20 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
+  const cardMaxWidth = width < 768 ? width - horizontalPadding * 2 : 520;
+
+  useEffect(() => {
+    const redirectIfLoggedIn = async () => {
+      const userId = await getUserIdFromToken();
+
+      if (userId) {
+        router.replace('/(tabs)');
+      }
+    };
+
+    void redirectIfLoggedIn();
+  }, []);
 
   const handleRegister = async () => {
     setLoading(true);
@@ -65,12 +82,12 @@ export default function RegisterScreen() {
         keyboardVerticalOffset={24}
     >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           automaticallyAdjustKeyboardInsets
         >
-                    <ThemedView style={styles.card}>
+                    <ThemedView style={[styles.card, { maxWidth: cardMaxWidth }]}>
           <ThemedText type="title" style={styles.title}>
             Create account
           </ThemedText>
@@ -158,10 +175,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingTop: 24,
-    paddingHorizontal: 24,
     paddingBottom: 72,
   },
   card: {
+    width: '100%',
+    alignSelf: 'center',
     borderRadius: 24,
     padding: 24,
     backgroundColor: '#14251F',

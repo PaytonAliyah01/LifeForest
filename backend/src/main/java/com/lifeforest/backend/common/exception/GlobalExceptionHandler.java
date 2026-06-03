@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import com.lifeforest.backend.focussession.exception.FocusSessionInterruptedException;
 import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
+import com.lifeforest.backend.reflection.exception.ReflectionNotFoundException;
 import com.lifeforest.backend.routine.exception.RoutineNotFoundException;
 import com.lifeforest.backend.task.exception.TaskNotFoundException;
 import com.lifeforest.backend.tree.exception.TreeNotFoundException;
@@ -82,6 +83,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TreeNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleTreeNotFound(TreeNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ReflectionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleReflectionNotFound(ReflectionNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 }

@@ -1,6 +1,7 @@
 package com.lifeforest.backend.user.domain;
 
 import com.lifeforest.backend.focussession.domain.FocusSession;
+import com.lifeforest.backend.reflection.domain.Reflection;
 import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.tree.domain.Tree;
 import jakarta.persistence.Column;
@@ -59,6 +60,10 @@ public class User {
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Tree> trees = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Reflection> reflections = new HashSet<>();
 
     @Column(nullable = false, length = 100)
     private String displayName;

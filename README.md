@@ -90,6 +90,37 @@ If your database is already running, you can skip Docker startup:
 .\start-backend-local.ps1 -SkipDocker
 ```
 
+## Run OWASP Top 10 security checks
+Use [docs/owasp-top-10-assessment.md](docs/owasp-top-10-assessment.md) as the assessment checklist.
+
+This project includes repeatable checks that support an OWASP Top 10 review:
+- Backend dependency scan: OWASP Dependency-Check through Gradle
+- Frontend dependency scan: `npm audit`
+- Optional dynamic scan: OWASP ZAP baseline scan
+
+Run both checks from the project root:
+```powershell
+.\security-check.ps1
+```
+
+Run only one side if needed:
+```powershell
+.\security-check.ps1 -SkipFrontend
+.\security-check.ps1 -SkipBackend
+```
+
+The backend OWASP report is written to:
+```text
+backend/build/reports/dependency-check-report.html
+```
+
+Run an OWASP ZAP baseline scan after the backend is running:
+```powershell
+.\security-check.ps1 -SkipBackend -SkipFrontend -ZapTarget http://localhost:8080
+```
+
+The backend check fails the build for vulnerabilities with CVSS `7.0` or higher. The first OWASP run can take longer because it downloads vulnerability data.
+
 ## Testing on a phone with Expo Go
 1. Make sure your phone and PC are on the same Wi-Fi network.
 2. Use your PC's LAN IP in `EXPO_PUBLIC_API_URL`.

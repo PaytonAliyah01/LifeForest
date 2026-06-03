@@ -26,6 +26,7 @@ import {
   type FocusSession,
   type TreeType,
 } from '@/services/focusSessionsApi';
+import { getReflectionByFocusSession } from '@/services/reflectionsApi';
 import { getRoutinesByUser, type Routine } from '@/services/routinesApi';
 import { getTasksByRoutine, type Task, type TaskCategory } from '@/services/tasksApi';
 
@@ -131,6 +132,9 @@ const formatTreeTypeLabel = (treeType: TreeType): string => {
   }
 };
 
+const isTaskAvailableForFocus = (task: Task): boolean =>
+  task.taskType === 'REPEATING' || !task.completed;
+
 export default function FocusSessionScreen() {
   const params = useLocalSearchParams<{
     taskId?: string;
@@ -152,9 +156,11 @@ export default function FocusSessionScreen() {
   const [session, setSession] = useState<FocusSession | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [lifecycleMessage, setLifecycleMessage] = useState('');
+  const [hasReflection, setHasReflection] = useState(false);
   const autoCompletingSessionRef = useRef(false);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const interruptingSessionRef = useRef(false);
+  const promptedReflectionSessionIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -203,7 +209,10 @@ export default function FocusSessionScreen() {
   }, []);
 
   const availableTasks = useMemo(
-    () => availableRoutines.flatMap((routine) => tasksByRoutine[routine.id] ?? []),
+    () =>
+      availableRoutines.flatMap((routine) =>
+        (tasksByRoutine[routine.id] ?? []).filter(isTaskAvailableForFocus),
+      ),
     [availableRoutines, tasksByRoutine],
   );
 
@@ -214,6 +223,20 @@ export default function FocusSessionScreen() {
 
     return availableTasks.find((task) => task.id === selectedTaskId) ?? null;
   }, [availableTasks, selectedTaskId]);
+
+  useEffect(() => {
+    if (selectedTaskId != null && selectedTask == null) {
+      setSelectedTaskId(null);
+    }
+  }, [selectedTask, selectedTaskId]);
+
+  useEffect(() => {
+    if (tasksLoading || availableTasks.length === 0 || selectedTaskId != null) {
+      return;
+    }
+
+    setSelectedTaskId(availableTasks[0].id);
+  }, [availableTasks, selectedTaskId, tasksLoading]);
 
   const fallbackSelectedTitle = selectedTask?.title ?? taskTitle;
   const fallbackSelectedDuration =
@@ -246,10 +269,30 @@ export default function FocusSessionScreen() {
     autoStart: false,
   });
 
+  const openReflectionScreen = useCallback(
+    (focusSession: FocusSession, outcome: 'completed' | 'interrupted') => {
+      if (promptedReflectionSessionIdRef.current === focusSession.id) {
+        return;
+      }
+
+      promptedReflectionSessionIdRef.current = focusSession.id;
+
+      router.replace({
+        pathname: '/reflection' as never,
+        params: {
+          focusSessionId: String(focusSession.id),
+          taskTitle: fallbackSelectedTitle || 'Focus session',
+          outcome,
+        } as never,
+      });
+    },
+    [fallbackSelectedTitle],
+  );
+
   const interruptActiveSession = useCallback(
     async (message: string) => {
       if (!session || session.completed || session.interrupted || interruptingSessionRef.current) {
-        return;
+        return null;
       }
 
       interruptingSessionRef.current = true;
@@ -257,8 +300,10 @@ export default function FocusSessionScreen() {
       try {
         const response = await interruptFocusSession(session.id);
         setSession(response);
+        setHasReflection(false);
         setLifecycleMessage(message);
         stop();
+        return response;
       } catch (error) {
         if (isAxiosError(error)) {
           const data = error.response?.data as
@@ -275,6 +320,8 @@ export default function FocusSessionScreen() {
       } finally {
         interruptingSessionRef.current = false;
       }
+
+      return null;
     },
     [session, stop],
   );
@@ -338,8 +385,10 @@ export default function FocusSessionScreen() {
     try {
       const response = await completeFocusSession(session.id);
       setSession(response);
+      setHasReflection(false);
       setLifecycleMessage('Session completed and saved.');
       stop();
+      openReflectionScreen(response, 'completed');
     } catch (error) {
       if (isAxiosError(error)) {
         const data = error.response?.data as
@@ -357,7 +406,29 @@ export default function FocusSessionScreen() {
       setLoading(false);
       autoCompletingSessionRef.current = false;
     }
-  }, [session, stop]);
+  }, [openReflectionScreen, session, stop]);
+
+  const handleEndSession = useCallback(async () => {
+    if (!session) {
+      setErrorMessage('There is no active session to end.');
+      return;
+    }
+
+    if (remainingSeconds > 0) {
+      pause();
+      const interruptedSession = await interruptActiveSession(
+        'Session ended early and was saved as interrupted.',
+      );
+
+      if (interruptedSession) {
+        openReflectionScreen(interruptedSession, 'interrupted');
+      }
+
+      return;
+    }
+
+    await handleCompleteSession();
+  }, [handleCompleteSession, interruptActiveSession, openReflectionScreen, pause, remainingSeconds, session]);
 
   useEffect(() => {
     if (!session) {
@@ -391,6 +462,37 @@ export default function FocusSessionScreen() {
     setLifecycleMessage('Focus block finished. Completing your session...');
     void handleCompleteSession();
   }, [handleCompleteSession, remainingSeconds, session]);
+
+  useEffect(() => {
+    const loadReflectionState = async () => {
+      if (!session?.id || (!session.completed && !session.interrupted)) {
+        setHasReflection(false);
+        return;
+      }
+
+      try {
+        const reflection = await getReflectionByFocusSession(session.id);
+        setHasReflection(reflection != null);
+      } catch {
+        setHasReflection(false);
+      }
+    };
+
+    void loadReflectionState();
+  }, [session?.id, session?.completed, session?.interrupted]);
+
+  useEffect(() => {
+    if (!session || (!session.completed && !session.interrupted) || hasReflection) {
+      return;
+    }
+
+    if (appStateRef.current !== 'active') {
+      return;
+    }
+
+    const outcome = session.interrupted ? 'interrupted' : 'completed';
+    openReflectionScreen(session, outcome);
+  }, [hasReflection, openReflectionScreen, session]);
 
   const formattedCompletedDuration = useMemo(() => {
     if (session?.duration == null) {
@@ -556,8 +658,9 @@ export default function FocusSessionScreen() {
               <View style={styles.taskOptions}>
                 {availableRoutines.map((routine) => {
                   const routineTasks = tasksByRoutine[routine.id] ?? [];
+                  const availableRoutineTasks = routineTasks.filter(isTaskAvailableForFocus);
 
-                  if (routineTasks.length === 0) {
+                  if (availableRoutineTasks.length === 0) {
                     return null;
                   }
 
@@ -567,7 +670,7 @@ export default function FocusSessionScreen() {
                         {routine.title}
                       </ThemedText>
 
-                      {routineTasks.map((task) => (
+                      {availableRoutineTasks.map((task) => (
                         <Pressable
                           key={task.id}
                           style={({ pressed }) => [
@@ -590,6 +693,11 @@ export default function FocusSessionScreen() {
                               {formatDurationHint(String(task.duration))?.replace('Suggested focus block: ', '')}
                             </ThemedText>
                           ) : null}
+                          <ThemedText type="default" style={styles.optionHelper}>
+                            {task.taskType === 'REPEATING'
+                              ? 'Repeating task'
+                              : 'One-time task'}
+                          </ThemedText>
                         </Pressable>
                       ))}
                     </View>
@@ -695,6 +803,7 @@ export default function FocusSessionScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.stopButton,
+                        styles.fullActionButton,
                         pressed && styles.buttonPressed,
                         loading && styles.buttonDisabled,
                       ]}
@@ -709,6 +818,7 @@ export default function FocusSessionScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.secondaryButton,
+                        styles.fullActionButton,
                         pressed && styles.buttonPressed,
                         loading && styles.buttonDisabled,
                       ]}
@@ -723,17 +833,18 @@ export default function FocusSessionScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.endButton,
+                        styles.fullActionButton,
                         pressed && styles.buttonPressed,
                         loading && styles.buttonDisabled,
                       ]}
-                      onPress={() => void handleCompleteSession()}
+                      onPress={() => void handleEndSession()}
                       disabled={loading}
                     >
                       {loading ? (
                         <ActivityIndicator color="#FFFFFF" />
                       ) : (
                         <ThemedText type="defaultSemiBold" style={styles.endButtonText}>
-                          End Session
+                          {remainingSeconds > 0 ? 'End Session Early' : 'End Session'}
                         </ThemedText>
                       )}
                     </Pressable>
@@ -743,18 +854,51 @@ export default function FocusSessionScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.primaryButton,
+                    styles.fullActionButton,
                     pressed && styles.buttonPressed,
                   ]}
                   onPress={() => router.back()}
-                >
+                  >
                   <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>
                     Back to task
+                  </ThemedText>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    styles.fullActionButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/reflection' as never,
+                      params: {
+                        focusSessionId: String(session.id),
+                        taskTitle: fallbackSelectedTitle || 'Focus session',
+                        outcome: session.interrupted ? 'interrupted' : session.completed ? 'completed' : 'active',
+                      } as never,
+                    })
+                  }
+                >
+                  <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
+                    {hasReflection ? 'View Reflection' : 'Add Reflection'}
                   </ThemedText>
                 </Pressable>
               </View>
             </View>
           ) : (
             <View style={styles.actions}>
+              {!hasTasksAvailable ? (
+                <ThemedText type="default" style={styles.actionStatusText}>
+                  Create a task first to unlock focus sessions.
+                </ThemedText>
+              ) : selectedTaskId == null ? (
+                <ThemedText type="default" style={styles.actionStatusText}>
+                  Choose a task above before starting your session.
+                </ThemedText>
+              ) : null}
+
               <Pressable
                 style={({ pressed }) => [
                   styles.secondaryButton,
@@ -880,6 +1024,9 @@ const styles = StyleSheet.create({
   optionMeta: {
     color: '#7EE081',
   },
+  optionHelper: {
+    color: '#98B7A7',
+  },
   title: {
     color: '#EAF6F0',
   },
@@ -964,65 +1111,73 @@ const styles = StyleSheet.create({
     color: '#EAF6F0',
   },
   actions: {
-    flexDirection: 'row',
-    gap: 12,
+    flexDirection: 'column',
+    gap: 10,
     backgroundColor: 'transparent',
   },
   primaryButton: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#7EE081',
     borderWidth: 1,
     borderColor: '#A5F0AF',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 46,
   },
   secondaryButton: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#1D3A2E',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#4FAF7A',
+    minHeight: 46,
   },
   primaryButtonText: {
     color: '#102218',
-    fontSize: 15,
+    fontSize: 14,
   },
   stopButton: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#33414D',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#738291',
+    minHeight: 46,
   },
   stopButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
   },
   endButton: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#B94A4A',
     borderWidth: 1,
     borderColor: '#E28787',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 46,
   },
   endButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
   },
   secondaryButtonText: {
     color: '#F3FBF6',
-    fontSize: 15,
+    fontSize: 14,
   },
   buttonPressed: {
     opacity: 0.88,
@@ -1030,6 +1185,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  fullActionButton: {
+    width: '100%',
+  },
+  actionStatusText: {
+    width: '100%',
+    color: '#98B7A7',
   },
   errorText: {
     color: '#FF8A8A',

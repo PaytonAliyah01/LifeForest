@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.owasp.dependencycheck' version '12.2.2'
 }
 
 group = 'com.lifeforest'
@@ -51,4 +52,12 @@ tasks.named('test') {
 
 tasks.named('bootJar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+dependencyCheck {
+    failBuildOnCVSS = 7.0
+    formats = ['HTML', 'JSON']
+    analyzers {
+        assemblyEnabled = false
+    }
 }

@@ -16,6 +16,9 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'list.bullet': 'list',
+  'chart.bar.fill': 'bar-chart',
+  'star.fill': 'star',
 } as const satisfies Record<string, ComponentProps<typeof MaterialIcons>['name']>;
 
 /**

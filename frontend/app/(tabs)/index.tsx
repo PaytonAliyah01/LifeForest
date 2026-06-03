@@ -4,14 +4,18 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { isAxiosError } from 'axios';
 
+import { ForestHeaderArt } from '@/components/forest-header-art';
+import { completeHabitToday, getTodayHabitsByUser, uncompleteHabitToday, type TodayHabit } from '@/services/habitsApi';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { api } from '@/services/api';
+import { getAnalyticsByUser, type Analytics } from '@/services/analyticsApi';
 import { getUserIdFromToken } from '@/services/authStorage';
 import { getRoutinesByUser, type Routine } from '@/services/routinesApi';
-import { getTasksByRoutine, type Task } from '@/services/tasksApi';
+import { getTasksByRoutine, type RepeatDay, type Task } from '@/services/tasksApi';
 import { getTreesByUser } from '@/services/treesApi';
+
+const WEEKLY_GOAL_MINUTES = 300;
 
 const formatTaskDuration = (duration: number): string => {
   if (duration < 60) {
@@ -44,69 +48,107 @@ const formatCategoryLabel = (category: Task['category']): string => {
   }
 };
 
-const getTreeMessage = (treeCount: number): string => {
-  if (treeCount === 0) {
-    return 'Your grove is waiting for its first tree.';
+const formatRepeatDays = (repeatDays: RepeatDay[]): string => {
+  if (repeatDays.length === 0) {
+    return 'Daily';
   }
 
-  if (treeCount === 1) {
-    return 'One tree is already standing in your forest.';
+  return repeatDays
+    .map((repeatDay) => repeatDay.slice(0, 3).toLowerCase())
+    .map((label) => label.charAt(0).toUpperCase() + label.slice(1))
+    .join(', ');
+};
+
+const isTaskAvailableForFocus = (task: Task): boolean =>
+  task.taskType === 'REPEATING' || !task.completed;
+
+const getWeeklyMessage = (weeklyFocusMinutes: number): string => {
+  if (weeklyFocusMinutes === 0) {
+    return 'No focused habit time logged this week yet.';
   }
 
-  return `${treeCount} trees are growing in your forest.`;
+  if (weeklyFocusMinutes >= WEEKLY_GOAL_MINUTES) {
+    return 'You already reached your weekly focus goal.';
+  }
+
+  return `${formatTaskDuration(WEEKLY_GOAL_MINUTES - weeklyFocusMinutes)} left to hit this week’s goal.`;
+};
+
+type QueueItem = {
+  routine: Routine;
+  task: Task;
+};
+
+const buildRecentWeek = (): string[] => {
+  const dates: string[] = [];
+
+  for (let index = 6; index >= 0; index -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - index);
+    dates.push(date.toISOString().slice(0, 10));
+  }
+
+  return dates;
 };
 
 export default function HomeScreen() {
   const { width } = useWindowDimensions();
-  const [message, setMessage] = useState('');
-  const [statusLoading, setStatusLoading] = useState(true);
-  const [statusError, setStatusError] = useState('');
   const [routinesLoading, setRoutinesLoading] = useState(true);
   const [routinesError, setRoutinesError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [tasksByRoutine, setTasksByRoutine] = useState<Record<number, Task[]>>({});
   const [treeCount, setTreeCount] = useState(0);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [todayHabits, setTodayHabits] = useState<TodayHabit[]>([]);
+  const [habitActionTaskId, setHabitActionTaskId] = useState<number | null>(null);
 
   const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
   const contentMaxWidth = width < 768 ? width - horizontalPadding * 2 : 940;
   const isCompact = width < 720;
+  const recentWeek = useMemo(() => buildRecentWeek(), []);
 
-  const totalTaskCount = useMemo(
-    () => Object.values(tasksByRoutine).reduce((count, tasks) => count + tasks.length, 0),
-    [tasksByRoutine],
+  const oneTimeFocusItems = useMemo<QueueItem[]>(
+    () =>
+      routines.flatMap((routine) =>
+        (tasksByRoutine[routine.id] ?? [])
+          .filter((task) => task.taskType === 'ONE_TIME' && !task.completed)
+          .map((task) => ({ routine, task })),
+      ),
+    [routines, tasksByRoutine],
   );
-  const completedTaskCount = useMemo(
+
+  const completedOneTimeTaskCount = useMemo(
     () =>
       Object.values(tasksByRoutine).reduce(
-        (count, tasks) => count + tasks.filter((task) => task.completed).length,
+        (count, tasks) =>
+          count + tasks.filter((task) => task.taskType === 'ONE_TIME' && task.completed).length,
         0,
       ),
     [tasksByRoutine],
   );
+
+  const focusableTaskCount = useMemo(
+    () =>
+      Object.values(tasksByRoutine).reduce(
+        (count, tasks) => count + tasks.filter(isTaskAvailableForFocus).length,
+        0,
+      ),
+    [tasksByRoutine],
+  );
+
   const activeRoutineCount = useMemo(
     () => routines.filter((routine) => !routine.completed).length,
     [routines],
   );
 
-  const fetchStatus = useCallback(async () => {
-    setStatusLoading(true);
-
-    try {
-      const response = await api.get<string>('/hello');
-      setMessage(response.data);
-      setStatusError('');
-    } catch (error) {
-      if (isAxiosError(error)) {
-        console.log('Status fetch error:', error.message, error.response?.status, error.response?.data);
-      } else {
-        console.log('Status fetch error:', error);
-      }
-
-      setStatusError('Could not reach the backend status endpoint.');
-    } finally {
-      setStatusLoading(false);
+  const weeklyProgress = useMemo(() => {
+    if (!analytics) {
+      return 0;
     }
-  }, []);
+
+    return Math.min(100, Math.round((analytics.weeklyFocusMinutes / WEEKLY_GOAL_MINUTES) * 100));
+  }, [analytics]);
 
   const fetchDashboard = useCallback(async () => {
     setRoutinesLoading(true);
@@ -116,57 +158,72 @@ export default function HomeScreen() {
       const userId = await getUserIdFromToken();
 
       if (!userId) {
+        setCurrentUserId(null);
         setRoutines([]);
         setTasksByRoutine({});
         setTreeCount(0);
+        setAnalytics(null);
+        setTodayHabits([]);
+        return;
+      }
+
+      setCurrentUserId(userId);
+
+      const routinesResponse = await getRoutinesByUser(userId);
+      setRoutines(routinesResponse);
+
+      const [treesResult, analyticsResult, habitsResult, tasksResults] = await Promise.all([
+        getTreesByUser(userId)
+          .then((treesResponse) => ({ trees: treesResponse }))
+          .catch(() => ({ trees: [] })),
+        getAnalyticsByUser(userId)
+          .then((response) => ({ analytics: response }))
+          .catch(() => ({ analytics: null })),
+        getTodayHabitsByUser(userId)
+          .then((response) => ({ habits: response }))
+          .catch(() => ({ habits: [] })),
+        Promise.all(
+          routinesResponse.map(async (routine) => {
+            try {
+              return [routine.id, await getTasksByRoutine(routine.id)] as const;
+            } catch {
+              return [routine.id, []] as const;
+            }
+          }),
+        ),
+      ]);
+
+      setTreeCount(treesResult.trees.length);
+      setAnalytics(analyticsResult.analytics);
+      setTodayHabits(habitsResult.habits);
+      setTasksByRoutine(Object.fromEntries(tasksResults));
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 404) {
+        setCurrentUserId(null);
+        setRoutines([]);
+        setTasksByRoutine({});
+        setTreeCount(0);
+        setAnalytics(null);
+        setTodayHabits([]);
         setRoutinesError('');
         return;
       }
 
-      const [routinesResponse, treesResponse] = await Promise.all([
-        getRoutinesByUser(userId),
-        getTreesByUser(userId),
-      ]);
-
-      setRoutines(routinesResponse);
-      setTreeCount(treesResponse.length);
-
-      const tasksEntries = await Promise.all(
-        routinesResponse.map(async (routine) => [
-          routine.id,
-          await getTasksByRoutine(routine.id),
-        ] as const),
-      );
-
-      setTasksByRoutine(Object.fromEntries(tasksEntries));
-    } catch (error) {
-      if (isAxiosError(error)) {
-        if (error.response?.status === 404) {
-          setRoutines([]);
-          setTasksByRoutine({});
-          setTreeCount(0);
-          setRoutinesError('');
-          return;
-        }
-
-        console.log('Dashboard fetch error:', error.message, error.response?.status, error.response?.data);
-      } else {
-        console.log('Dashboard fetch error:', error);
-      }
-
+      setCurrentUserId(null);
       setRoutines([]);
       setTasksByRoutine({});
       setTreeCount(0);
-      setRoutinesError('Could not load your routines and forest right now.');
+      setAnalytics(null);
+      setTodayHabits([]);
+      setRoutinesError('Could not load your habit dashboard right now.');
     } finally {
       setRoutinesLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void fetchStatus();
     void fetchDashboard();
-  }, [fetchDashboard, fetchStatus]);
+  }, [fetchDashboard]);
 
   useFocusEffect(
     useCallback(() => {
@@ -174,9 +231,9 @@ export default function HomeScreen() {
     }, [fetchDashboard]),
   );
 
-  const openRoutineEditor = (routine: Routine) => {
+  const openRoutineScreen = (routine: Routine) => {
     router.push({
-      pathname: '/edit-routine',
+      pathname: '/routine',
       params: {
         id: String(routine.id),
         title: routine.title,
@@ -196,6 +253,9 @@ export default function HomeScreen() {
         description: task.description ?? '',
         duration: task.duration == null ? '' : String(task.duration),
         category: task.category,
+        taskType: task.taskType,
+        repeatDays: task.repeatDays.join(','),
+        preferredTime: task.preferredTime ?? '',
         completed: String(task.completed),
       },
     });
@@ -214,21 +274,225 @@ export default function HomeScreen() {
     } as never);
   };
 
+  const toggleHabitCompletion = async (habit: TodayHabit) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    setHabitActionTaskId(habit.taskId);
+
+    try {
+      const updatedHabit = habit.completedToday
+        ? await uncompleteHabitToday(currentUserId, habit.taskId)
+        : await completeHabitToday(currentUserId, habit.taskId);
+
+      setTodayHabits((currentHabits) =>
+        currentHabits.map((currentHabit) =>
+          currentHabit.taskId === updatedHabit.taskId ? updatedHabit : currentHabit,
+        ),
+      );
+    } finally {
+      setHabitActionTaskId(null);
+    }
+  };
+
+  const renderTodayHabitCard = (habit: TodayHabit) => {
+    const taskForNavigation: Task = {
+      id: habit.taskId,
+      routineId: habit.routineId,
+      title: habit.title,
+      description: habit.description,
+      duration: habit.duration,
+      category: habit.category,
+      taskType: 'REPEATING',
+      repeatDays: habit.repeatDays,
+      preferredTime: habit.preferredTime,
+      completed: false,
+    };
+
+    return (
+      <Pressable
+        key={habit.taskId}
+        style={({ pressed }) => [styles.habitCard, pressed && styles.habitCardPressed]}
+        onPress={() => openTaskEditor(taskForNavigation)}
+      >
+        <View style={styles.habitHeaderRow}>
+          <View style={styles.habitCopy}>
+            <ThemedText type="defaultSemiBold" style={styles.habitTitle}>
+              {habit.title}
+            </ThemedText>
+            <ThemedText style={styles.habitRoutineLabel}>{habit.routineTitle}</ThemedText>
+          </View>
+
+          <ThemedView style={[styles.habitTypeBadge, styles.habitTypeBadgeHabit]}>
+            <ThemedText style={[styles.habitTypeBadgeText, styles.habitTypeBadgeTextHabit]}>
+              Due today
+            </ThemedText>
+          </ThemedView>
+        </View>
+
+        {habit.description ? (
+          <ThemedText style={styles.habitDescription}>{habit.description}</ThemedText>
+        ) : null}
+
+        <View style={styles.habitMetaRow}>
+          <ThemedView style={styles.metaChip}>
+            <ThemedText style={styles.metaChipText}>{formatCategoryLabel(habit.category)}</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.metaChip}>
+            <ThemedText style={styles.metaChipText}>{formatRepeatDays(habit.repeatDays)}</ThemedText>
+          </ThemedView>
+          {habit.preferredTime ? (
+            <ThemedView style={styles.metaChip}>
+              <ThemedText style={styles.metaChipText}>{habit.preferredTime}</ThemedText>
+            </ThemedView>
+          ) : null}
+          {habit.duration != null ? (
+            <ThemedView style={styles.metaChip}>
+              <ThemedText style={styles.metaChipText}>{formatTaskDuration(habit.duration)}</ThemedText>
+            </ThemedView>
+          ) : null}
+        </View>
+
+        <View style={styles.habitStatsRow}>
+          <ThemedView style={styles.habitStatChip}>
+            <ThemedText style={styles.habitStatValue}>{habit.currentStreak}</ThemedText>
+            <ThemedText style={styles.habitStatLabel}>day streak</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.habitStatChip}>
+            <ThemedText style={styles.habitStatValue}>{habit.weeklyCompletionCount}</ThemedText>
+            <ThemedText style={styles.habitStatLabel}>done this week</ThemedText>
+          </ThemedView>
+        </View>
+
+        <View style={styles.historyRow}>
+          {recentWeek.map((date) => {
+            const completed = habit.recentCompletedDates.includes(date);
+
+            return (
+              <View
+                key={`${habit.taskId}-${date}`}
+                style={[styles.historyDot, completed ? styles.historyDotDone : styles.historyDotOpen]}
+              />
+            );
+          })}
+        </View>
+
+        <View style={styles.habitActionRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.habitCheckoffButton,
+              habit.completedToday ? styles.habitCheckoffDone : styles.habitCheckoffOpen,
+              pressed && styles.habitActionButtonPressed,
+              habitActionTaskId === habit.taskId && styles.habitActionButtonDisabled,
+            ]}
+            onPress={(event) => {
+              event.stopPropagation();
+              void toggleHabitCompletion(habit);
+            }}
+            disabled={habitActionTaskId === habit.taskId}
+          >
+            {habitActionTaskId === habit.taskId ? (
+              <ActivityIndicator size="small" color="#F3FBF6" />
+            ) : (
+              <ThemedText type="defaultSemiBold" style={styles.habitCheckoffButtonText}>
+                {habit.completedToday ? 'Completed Today' : 'Check Off Habit'}
+              </ThemedText>
+            )}
+          </Pressable>
+
+          <Pressable
+            style={styles.habitSecondaryButton}
+            onPress={(event) => {
+              event.stopPropagation();
+              openFocusSession(taskForNavigation);
+            }}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.habitSecondaryButtonText}>
+              Start Focus
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderQueueCard = (item: QueueItem) => {
+    const { routine, task } = item;
+
+    return (
+      <Pressable
+        key={task.id}
+        style={({ pressed }) => [styles.habitCard, pressed && styles.habitCardPressed]}
+        onPress={() => openTaskEditor(task)}
+      >
+        <View style={styles.habitHeaderRow}>
+          <View style={styles.habitCopy}>
+            <ThemedText type="defaultSemiBold" style={styles.habitTitle}>
+              {task.title}
+            </ThemedText>
+            <ThemedText style={styles.habitRoutineLabel}>{routine.title}</ThemedText>
+          </View>
+
+          <ThemedView style={[styles.habitTypeBadge, styles.habitTypeBadgeTask]}>
+            <ThemedText style={[styles.habitTypeBadgeText, styles.habitTypeBadgeTextTask]}>
+              One-time
+            </ThemedText>
+          </ThemedView>
+        </View>
+
+        {task.description ? (
+          <ThemedText style={styles.habitDescription}>{task.description}</ThemedText>
+        ) : null}
+
+        <View style={styles.habitMetaRow}>
+          <ThemedView style={styles.metaChip}>
+            <ThemedText style={styles.metaChipText}>{formatCategoryLabel(task.category)}</ThemedText>
+          </ThemedView>
+          {task.duration != null ? (
+            <ThemedView style={styles.metaChip}>
+              <ThemedText style={styles.metaChipText}>{formatTaskDuration(task.duration)}</ThemedText>
+            </ThemedView>
+          ) : null}
+        </View>
+
+        <View style={styles.habitActionRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.habitCheckoffButton,
+              styles.habitCheckoffOpen,
+              pressed && styles.habitActionButtonPressed,
+            ]}
+            onPress={(event) => {
+              event.stopPropagation();
+              openFocusSession(task);
+            }}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.habitCheckoffButtonText}>
+              Complete Through Focus
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={styles.habitSecondaryButton}
+            onPress={(event) => {
+              event.stopPropagation();
+              openRoutineScreen(routine);
+            }}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.habitSecondaryButtonText}>
+              Open Routine
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D6E6D7', dark: '#112018' }}
-      headerImage={
-        <View style={styles.headerArt}>
-          <View style={styles.headerGlowLarge} />
-          <View style={styles.headerGlowSmall} />
-          <View style={styles.headerHillBack} />
-          <View style={styles.headerHillFront} />
-          <View style={styles.headerTreeTrunk} />
-          <View style={styles.headerTreeCanopyMain} />
-          <View style={styles.headerTreeCanopyLeft} />
-          <View style={styles.headerTreeCanopyRight} />
-        </View>
-      }
+      headerImage={<ForestHeaderArt />}
     >
       <ThemedView
         style={[
@@ -240,42 +504,43 @@ export default function HomeScreen() {
         ]}
       >
         <ThemedView style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
+          <View style={[styles.heroTopRow, isCompact && styles.heroTopRowCompact]}>
             <View style={styles.heroCopy}>
               <ThemedText type="title" style={styles.heroTitle}>
-                Grow focus into a forest.
+                Today&apos;s Habits
               </ThemedText>
               <ThemedText style={styles.heroSubtitle}>
-                Turn your routines, tasks, and focus sessions into something that feels alive instead of another checklist.
+                Show up for your repeating habits first, then use focus sessions to support the
+                ones that need extra attention.
               </ThemedText>
             </View>
 
             <View style={styles.heroBadge}>
               <ThemedText type="defaultSemiBold" style={styles.heroBadgeLabel}>
-                Forest
+                Weekly goal
               </ThemedText>
-              <ThemedText style={styles.heroBadgeValue}>{treeCount}</ThemedText>
+              <ThemedText style={styles.heroBadgeValue}>{weeklyProgress}%</ThemedText>
             </View>
           </View>
 
           <View style={[styles.heroStatsRow, isCompact && styles.heroStatsColumn]}>
             <ThemedView style={styles.heroStatCard}>
               <ThemedText type="defaultSemiBold" style={styles.heroStatValue}>
-                {activeRoutineCount}
+                {todayHabits.length}
               </ThemedText>
-              <ThemedText style={styles.heroStatLabel}>Active routines</ThemedText>
+              <ThemedText style={styles.heroStatLabel}>Habits due today</ThemedText>
             </ThemedView>
             <ThemedView style={styles.heroStatCard}>
               <ThemedText type="defaultSemiBold" style={styles.heroStatValue}>
-                {totalTaskCount}
+                {oneTimeFocusItems.length}
               </ThemedText>
-              <ThemedText style={styles.heroStatLabel}>Tasks in motion</ThemedText>
+              <ThemedText style={styles.heroStatLabel}>One-time tasks open</ThemedText>
             </ThemedView>
             <ThemedView style={styles.heroStatCard}>
               <ThemedText type="defaultSemiBold" style={styles.heroStatValue}>
-                {completedTaskCount}
+                {treeCount}
               </ThemedText>
-              <ThemedText style={styles.heroStatLabel}>Tasks completed</ThemedText>
+              <ThemedText style={styles.heroStatLabel}>Trees earned</ThemedText>
             </ThemedView>
           </View>
 
@@ -283,11 +548,11 @@ export default function HomeScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.primaryActionButton,
-                totalTaskCount === 0 && styles.actionButtonDisabled,
-                pressed && totalTaskCount > 0 && styles.actionButtonPressed,
+                focusableTaskCount === 0 && styles.actionButtonDisabled,
+                pressed && focusableTaskCount > 0 && styles.actionButtonPressed,
               ]}
               onPress={() => openFocusSession()}
-              disabled={totalTaskCount === 0}
+              disabled={focusableTaskCount === 0}
             >
               <ThemedText type="defaultSemiBold" style={styles.primaryActionButtonText}>
                 Start Focus Session
@@ -299,7 +564,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/create-routine')}
             >
               <ThemedText type="defaultSemiBold" style={styles.secondaryActionButtonText}>
-                Create Routine
+                Create Habit Routine
               </ThemedText>
             </Pressable>
 
@@ -310,53 +575,60 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {totalTaskCount === 0 ? (
-            <ThemedText style={styles.actionHelperText}>
-              Add a task before starting a focus session.
-            </ThemedText>
-          ) : null}
+          <ThemedText style={styles.actionHelperText}>
+            {analytics
+              ? getWeeklyMessage(analytics.weeklyFocusMinutes)
+              : 'Build routines and complete focus sessions to start shaping your weekly rhythm.'}
+          </ThemedText>
         </ThemedView>
 
         <View style={[styles.panelGrid, isCompact && styles.panelGridCompact]}>
           <ThemedView style={styles.statusCard}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              System Pulse
+              Habit Rhythm
             </ThemedText>
-            {statusLoading ? (
-              <ActivityIndicator size="small" color="#7EE081" />
-            ) : statusError ? (
-              <ThemedText style={styles.errorText}>{statusError}</ThemedText>
-            ) : (
-              <ThemedText style={styles.statusMessage}>
-                {message || 'Backend online.'}
-              </ThemedText>
-            )}
+            <ThemedText style={styles.statusValue}>
+              {analytics ? formatTaskDuration(analytics.weeklyFocusMinutes) : '0 min'}
+            </ThemedText>
+            <ThemedText style={styles.statusMessage}>Focused time logged in the last 7 days.</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.statusCard}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Forest Outlook
+              Consistency Snapshot
             </ThemedText>
-            <ThemedText style={styles.statusMessage}>{getTreeMessage(treeCount)}</ThemedText>
+            <ThemedText style={styles.statusValue}>{activeRoutineCount}</ThemedText>
+            <ThemedText style={styles.statusMessage}>
+              Active routines supporting your habit system right now.
+            </ThemedText>
+          </ThemedView>
+
+          <ThemedView style={styles.statusCard}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Completed One-Time Tasks
+            </ThemedText>
+            <ThemedText style={styles.statusValue}>{completedOneTimeTaskCount}</ThemedText>
+            <ThemedText style={styles.statusMessage}>
+              Finished one-time tasks earned through focused work.
+            </ThemedText>
           </ThemedView>
         </View>
 
-        <ThemedView style={styles.routinesSection}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionHeaderCopy}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Your Routines
-              </ThemedText>
-              <ThemedText style={styles.sectionSubtitle}>
-                Keep the daily systems visible, and jump straight into the next useful thing.
-              </ThemedText>
-            </View>
+        <ThemedView style={styles.sectionCard}>
+          <View style={styles.sectionHeaderCopy}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Today&apos;s Repeating Habits
+            </ThemedText>
+            <ThemedText style={styles.sectionSubtitle}>
+              Check off habits directly here, track their streaks, or start a focus session when one
+              needs more intentional time.
+            </ThemedText>
           </View>
 
           {routinesLoading ? (
             <ThemedView style={styles.feedbackCard}>
               <ActivityIndicator size="small" color="#7EE081" />
-              <ThemedText style={styles.feedbackText}>Loading your routines...</ThemedText>
+              <ThemedText style={styles.feedbackText}>Loading your habits...</ThemedText>
             </ThemedView>
           ) : null}
 
@@ -366,144 +638,100 @@ export default function HomeScreen() {
             </ThemedView>
           ) : null}
 
-          {!routinesLoading && !routinesError && routines.length === 0 ? (
+          {!routinesLoading && !routinesError && todayHabits.length === 0 ? (
             <ThemedView style={styles.feedbackCard}>
               <ThemedText type="defaultSemiBold" style={styles.emptyTitle}>
-                Nothing planted yet
+                No habits due today
               </ThemedText>
               <ThemedText style={styles.feedbackText}>
-                Create your first routine and start turning attention into visible growth.
+                Add repeating tasks with a schedule, or wait for your next habit day to come up.
               </ThemedText>
             </ThemedView>
           ) : null}
 
-          {!routinesLoading && !routinesError
-            ? routines.map((routine) => {
+          {!routinesLoading && !routinesError ? (
+            <View style={styles.habitList}>{todayHabits.map((habit) => renderTodayHabitCard(habit))}</View>
+          ) : null}
+        </ThemedView>
+
+        <ThemedView style={styles.sectionCard}>
+          <View style={styles.sectionHeaderCopy}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              One-Time Focus Queue
+            </ThemedText>
+            <ThemedText style={styles.sectionSubtitle}>
+              These are the one-time tasks you still need to finish through focused work.
+            </ThemedText>
+          </View>
+
+          {!routinesLoading && !routinesError && oneTimeFocusItems.length === 0 ? (
+            <ThemedView style={styles.feedbackCard}>
+              <ThemedText type="defaultSemiBold" style={styles.emptyTitle}>
+                No one-time tasks waiting
+              </ThemedText>
+              <ThemedText style={styles.feedbackText}>
+                Your queue is clear right now, or you have only repeating habits in play.
+              </ThemedText>
+            </ThemedView>
+          ) : null}
+
+          {!routinesLoading && !routinesError ? (
+            <View style={styles.habitList}>{oneTimeFocusItems.map(renderQueueCard)}</View>
+          ) : null}
+        </ThemedView>
+
+        <ThemedView style={styles.sectionCard}>
+          <View style={styles.sectionHeaderCopy}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Your Systems
+            </ThemedText>
+            <ThemedText style={styles.sectionSubtitle}>
+              Routines are the systems that hold your habits together over time.
+            </ThemedText>
+          </View>
+
+          {!routinesLoading && !routinesError && routines.length === 0 ? (
+            <ThemedView style={styles.feedbackCard}>
+              <ThemedText type="defaultSemiBold" style={styles.emptyTitle}>
+                No routines yet
+              </ThemedText>
+              <ThemedText style={styles.feedbackText}>
+                Create your first routine to start building a habit system around it.
+              </ThemedText>
+            </ThemedView>
+          ) : null}
+
+          {!routinesLoading && !routinesError ? (
+            <View style={styles.systemList}>
+              {routines.map((routine) => {
                 const tasks = tasksByRoutine[routine.id] ?? [];
+                const repeatingCount = tasks.filter((task) => task.taskType === 'REPEATING').length;
 
                 return (
-                  <ThemedView key={routine.id} style={styles.routineCard}>
-                    <View style={styles.routineHeaderRow}>
-                      <View style={styles.routineHeaderCopy}>
-                        <ThemedText type="defaultSemiBold" style={styles.routineTitle}>
+                  <Pressable
+                    key={routine.id}
+                    style={({ pressed }) => [styles.systemCard, pressed && styles.systemCardPressed]}
+                    onPress={() => openRoutineScreen(routine)}
+                  >
+                    <View style={styles.systemHeaderRow}>
+                      <View style={styles.systemCopy}>
+                        <ThemedText type="defaultSemiBold" style={styles.systemTitle}>
                           {routine.title}
                         </ThemedText>
-                        {routine.description ? (
-                          <ThemedText style={styles.routineDescription}>
-                            {routine.description}
-                          </ThemedText>
-                        ) : (
-                          <ThemedText style={styles.routineDescriptionMuted}>
-                            Add a description to make this routine feel more intentional.
-                          </ThemedText>
-                        )}
-                      </View>
-
-                      <View
-                        style={[
-                          styles.routineStateBadge,
-                          routine.completed ? styles.routineStateDone : styles.routineStateActive,
-                        ]}
-                      >
-                        <ThemedText
-                          type="defaultSemiBold"
-                          style={[
-                            styles.routineStateText,
-                            routine.completed
-                              ? styles.routineStateTextDone
-                              : styles.routineStateTextActive,
-                          ]}
-                        >
-                          {routine.completed ? 'Completed' : 'Growing'}
+                        <ThemedText style={styles.systemDescription}>
+                          {routine.description || 'Open this routine to shape its habits and tasks.'}
                         </ThemedText>
                       </View>
+
+                      <ThemedView style={styles.systemCountBadge}>
+                        <ThemedText style={styles.systemCountText}>{repeatingCount} habits</ThemedText>
+                      </ThemedView>
                     </View>
-
-                    <View style={styles.routineMetaRow}>
-                      <ThemedText style={styles.routineMetaText}>
-                        {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
-                      </ThemedText>
-                      <ThemedText style={styles.routineMetaDivider}>•</ThemedText>
-                      <ThemedText style={styles.routineMetaText}>
-                        {tasks.filter((task) => task.completed).length} finished
-                      </ThemedText>
-                    </View>
-
-                    <ThemedView style={styles.tasksSection}>
-                      {tasks.length > 0 ? (
-                        tasks.map((task) => (
-                          <Pressable
-                            key={task.id}
-                            style={({ pressed }) => [
-                              styles.taskCard,
-                              pressed && styles.taskCardPressed,
-                            ]}
-                            onPress={() => openTaskEditor(task)}
-                          >
-                            <View style={styles.taskHeaderRow}>
-                              <ThemedText type="defaultSemiBold" style={styles.taskTitle}>
-                                {task.title}
-                              </ThemedText>
-                              <View style={styles.taskCategoryBadge}>
-                                <ThemedText style={styles.taskCategoryText}>
-                                  {formatCategoryLabel(task.category)}
-                                </ThemedText>
-                              </View>
-                            </View>
-
-                            {task.description ? (
-                              <ThemedText style={styles.taskDescription}>
-                                {task.description}
-                              </ThemedText>
-                            ) : null}
-
-                            <View style={styles.taskMetaRow}>
-                              {task.duration != null ? (
-                                <ThemedText style={styles.taskDuration}>
-                                  {formatTaskDuration(task.duration)}
-                                </ThemedText>
-                              ) : (
-                                <ThemedText style={styles.taskDurationMuted}>
-                                  No duration set
-                                </ThemedText>
-                              )}
-                              <ThemedText style={styles.taskMetaState}>
-                                {task.completed ? 'Completed' : 'Ready to focus'}
-                              </ThemedText>
-                            </View>
-
-                            <Pressable
-                              style={({ pressed }) => [
-                                styles.taskActionButton,
-                                pressed && styles.taskActionButtonPressed,
-                              ]}
-                              onPress={(event) => {
-                                event.stopPropagation();
-                                openFocusSession(task);
-                              }}
-                            >
-                              <ThemedText type="defaultSemiBold" style={styles.taskActionButtonText}>
-                                Start Session
-                              </ThemedText>
-                            </Pressable>
-                          </Pressable>
-                        ))
-                      ) : (
-                        <ThemedText style={styles.emptyTaskText}>
-                          No tasks yet for this routine.
-                        </ThemedText>
-                      )}
-                    </ThemedView>
-
-                    <Pressable style={styles.routineActionButton} onPress={() => openRoutineEditor(routine)}>
-                      <ThemedText type="defaultSemiBold" style={styles.routineActionButtonText}>
-                        Edit Routine
-                      </ThemedText>
-                    </Pressable>
-                  </ThemedView>
+                  </Pressable>
                 );
-              })
-            : null}
+              })}
+            </View>
+          ) : null}
         </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
@@ -515,94 +743,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     gap: 18,
-  },
-  headerArt: {
-    flex: 1,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  headerGlowLarge: {
-    position: 'absolute',
-    top: 18,
-    right: 38,
-    width: 150,
-    height: 150,
-    borderRadius: 999,
-    backgroundColor: '#CFE4B6',
-    opacity: 0.6,
-  },
-  headerGlowSmall: {
-    position: 'absolute',
-    top: 40,
-    right: 125,
-    width: 58,
-    height: 58,
-    borderRadius: 999,
-    backgroundColor: '#F3D28C',
-    opacity: 0.75,
-  },
-  headerHillBack: {
-    position: 'absolute',
-    left: -50,
-    right: -50,
-    bottom: 34,
-    height: 120,
-    borderTopLeftRadius: 180,
-    borderTopRightRadius: 180,
-    backgroundColor: '#5D8D5A',
-    opacity: 0.75,
-  },
-  headerHillFront: {
-    position: 'absolute',
-    left: -30,
-    right: -30,
-    bottom: -12,
-    height: 125,
-    borderTopLeftRadius: 180,
-    borderTopRightRadius: 180,
-    backgroundColor: '#2F5B41',
-  },
-  headerTreeTrunk: {
-    position: 'absolute',
-    bottom: 52,
-    left: 62,
-    width: 24,
-    height: 110,
-    borderRadius: 999,
-    backgroundColor: '#6C4C2F',
-  },
-  headerTreeCanopyMain: {
-    position: 'absolute',
-    bottom: 122,
-    left: 28,
-    width: 92,
-    height: 92,
-    borderRadius: 999,
-    backgroundColor: '#73B168',
-    borderWidth: 3,
-    borderColor: '#D1F1A9',
-  },
-  headerTreeCanopyLeft: {
-    position: 'absolute',
-    bottom: 108,
-    left: -6,
-    width: 78,
-    height: 78,
-    borderRadius: 999,
-    backgroundColor: '#5E9D58',
-    borderWidth: 3,
-    borderColor: '#C2E89A',
-  },
-  headerTreeCanopyRight: {
-    position: 'absolute',
-    bottom: 108,
-    left: 76,
-    width: 78,
-    height: 78,
-    borderRadius: 999,
-    backgroundColor: '#86C379',
-    borderWidth: 3,
-    borderColor: '#D8F2B3',
   },
   heroCard: {
     borderRadius: 28,
@@ -616,11 +756,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    flexWrap: 'wrap',
     gap: 16,
     backgroundColor: 'transparent',
   },
+  heroTopRowCompact: {
+    flexDirection: 'column',
+  },
   heroCopy: {
     flex: 1,
+    minWidth: 0,
     gap: 8,
     backgroundColor: 'transparent',
   },
@@ -630,9 +775,11 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     color: '#B7CCC2',
     lineHeight: 22,
+    flexShrink: 1,
   },
   heroBadge: {
-    minWidth: 88,
+    minWidth: 104,
+    alignSelf: 'flex-start',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -663,6 +810,7 @@ const styles = StyleSheet.create({
   },
   heroStatCard: {
     flex: 1,
+    minWidth: 0,
     borderRadius: 18,
     padding: 16,
     backgroundColor: '#182D24',
@@ -739,6 +887,8 @@ const styles = StyleSheet.create({
   },
   actionHelperText: {
     color: '#8FB4A2',
+    lineHeight: 21,
+    flexShrink: 1,
   },
   panelGrid: {
     flexDirection: 'row',
@@ -757,34 +907,44 @@ const styles = StyleSheet.create({
     borderColor: '#244338',
     gap: 10,
   },
+  statusValue: {
+    color: '#F1F7EE',
+    fontSize: 28,
+    fontWeight: '700',
+  },
   sectionTitle: {
     color: '#F1F7EE',
+    flexShrink: 1,
   },
   sectionSubtitle: {
     color: '#8FB4A2',
     lineHeight: 20,
+    flexShrink: 1,
   },
   statusMessage: {
     color: '#C9DED2',
     lineHeight: 21,
+    flexShrink: 1,
   },
-  routinesSection: {
+  sectionCard: {
+    borderRadius: 22,
+    padding: 20,
+    backgroundColor: '#14251F',
+    borderWidth: 1,
+    borderColor: '#244338',
     gap: 14,
-    backgroundColor: 'transparent',
-  },
-  sectionHeaderRow: {
-    backgroundColor: 'transparent',
   },
   sectionHeaderCopy: {
+    minWidth: 0,
     gap: 6,
     backgroundColor: 'transparent',
   },
   feedbackCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: '#182D24',
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: '#2A4A3D',
     gap: 10,
     alignItems: 'center',
   },
@@ -798,161 +958,218 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#FF9B9B',
   },
-  routineCard: {
-    borderRadius: 22,
-    padding: 18,
-    backgroundColor: '#14251F',
-    borderWidth: 1,
-    borderColor: '#244338',
-    gap: 14,
+  habitList: {
+    gap: 12,
+    backgroundColor: 'transparent',
   },
-  routineHeaderRow: {
+  habitCard: {
+    borderRadius: 18,
+    padding: 16,
+    backgroundColor: '#1A2E25',
+    borderWidth: 1,
+    borderColor: '#2F5244',
+    gap: 10,
+  },
+  habitCardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
+  },
+  habitHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 14,
+    gap: 12,
     backgroundColor: 'transparent',
   },
-  routineHeaderCopy: {
+  habitCopy: {
     flex: 1,
-    gap: 6,
+    gap: 4,
     backgroundColor: 'transparent',
   },
-  routineTitle: {
+  habitTitle: {
     color: '#F1F7EE',
-    fontSize: 19,
+    fontSize: 18,
   },
-  routineDescription: {
-    color: '#B7CCC2',
-    lineHeight: 20,
+  habitRoutineLabel: {
+    color: '#8FB4A2',
   },
-  routineDescriptionMuted: {
-    color: '#7FA08E',
-    fontStyle: 'italic',
-  },
-  routineStateBadge: {
+  habitTypeBadge: {
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  routineStateActive: {
+  habitTypeBadgeHabit: {
     backgroundColor: '#183524',
     borderColor: '#4FAF7A',
   },
-  routineStateDone: {
-    backgroundColor: '#233140',
+  habitTypeBadgeTask: {
+    backgroundColor: '#2A2E3C',
     borderColor: '#88B8FF',
   },
-  routineStateText: {
+  habitTypeBadgeText: {
     fontSize: 12,
   },
-  routineStateTextActive: {
+  habitTypeBadgeTextHabit: {
     color: '#8DE2A8',
   },
-  routineStateTextDone: {
+  habitTypeBadgeTextTask: {
     color: '#B4D4FF',
   },
-  routineMetaRow: {
+  habitDescription: {
+    color: '#B7CCC2',
+    lineHeight: 20,
+  },
+  habitMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     backgroundColor: 'transparent',
   },
-  routineMetaText: {
-    color: '#8FB4A2',
-  },
-  routineMetaDivider: {
-    color: '#4D6B5D',
-  },
-  tasksSection: {
-    gap: 10,
-    backgroundColor: 'transparent',
-  },
-  taskCard: {
-    borderRadius: 16,
-    padding: 14,
-    backgroundColor: '#1A2E25',
-    borderWidth: 1,
-    borderColor: '#2F5244',
-    gap: 8,
-  },
-  taskCardPressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.99 }],
-  },
-  taskHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'transparent',
-  },
-  taskTitle: {
-    flex: 1,
-    color: '#F1F7EE',
-  },
-  taskCategoryBadge: {
+  metaChip: {
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: '#244338',
   },
-  taskCategoryText: {
+  metaChipText: {
     color: '#BFE7D2',
     fontSize: 12,
   },
-  taskDescription: {
-    color: '#A7C8B7',
-    lineHeight: 20,
-  },
-  taskMetaRow: {
+  habitStatsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     gap: 10,
     backgroundColor: 'transparent',
   },
-  taskDuration: {
-    color: '#8DE2A8',
-  },
-  taskDurationMuted: {
-    color: '#739181',
-  },
-  taskMetaState: {
-    color: '#8FB4A2',
-  },
-  taskActionButton: {
-    marginTop: 2,
-    alignSelf: 'flex-start',
-    borderRadius: 999,
+  habitStatChip: {
+    flex: 1,
+    borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#2B5642',
+    paddingVertical: 10,
+    backgroundColor: '#20362C',
     borderWidth: 1,
-    borderColor: '#7CCF96',
+    borderColor: '#325346',
+    gap: 2,
   },
-  taskActionButtonPressed: {
-    opacity: 0.9,
+  habitStatValue: {
+    color: '#F1F7EE',
+    fontSize: 20,
+    fontWeight: '700',
   },
-  taskActionButtonText: {
-    color: '#F3FBF6',
-    fontSize: 14,
+  habitStatLabel: {
+    color: '#8FB4A2',
+    fontSize: 12,
   },
-  emptyTaskText: {
-    color: '#7FA08E',
+  historyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'transparent',
   },
-  routineActionButton: {
-    alignSelf: 'flex-start',
+  historyDot: {
+    flex: 1,
+    height: 10,
+    borderRadius: 999,
+  },
+  historyDotDone: {
+    backgroundColor: '#7EE081',
+  },
+  historyDotOpen: {
+    backgroundColor: '#314A40',
+  },
+  habitActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  habitCheckoffButton: {
+    flex: 1,
+    minWidth: 170,
     borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#1D3A2E',
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#4FAF7A',
   },
-  routineActionButtonText: {
+  habitCheckoffOpen: {
+    backgroundColor: '#2B5642',
+    borderColor: '#7CCF96',
+  },
+  habitCheckoffDone: {
+    backgroundColor: '#3E6C4C',
+    borderColor: '#A5F0AF',
+  },
+  habitCheckoffButtonText: {
     color: '#F3FBF6',
     fontSize: 14,
+  },
+  habitActionButtonPressed: {
+    opacity: 0.9,
+  },
+  habitActionButtonDisabled: {
+    opacity: 0.5,
+  },
+  habitSecondaryButton: {
+    flex: 1,
+    minWidth: 140,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#20362C',
+    borderWidth: 1,
+    borderColor: '#547568',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  habitSecondaryButtonText: {
+    color: '#E2EEE8',
+    fontSize: 14,
+  },
+  systemList: {
+    gap: 12,
+    backgroundColor: 'transparent',
+  },
+  systemCard: {
+    borderRadius: 18,
+    padding: 16,
+    backgroundColor: '#1A2E25',
+    borderWidth: 1,
+    borderColor: '#2F5244',
+  },
+  systemCardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
+  },
+  systemHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: 'transparent',
+  },
+  systemCopy: {
+    flex: 1,
+    gap: 6,
+    backgroundColor: 'transparent',
+  },
+  systemTitle: {
+    color: '#F1F7EE',
+    fontSize: 18,
+  },
+  systemDescription: {
+    color: '#B7CCC2',
+    lineHeight: 20,
+  },
+  systemCountBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#244338',
+  },
+  systemCountText: {
+    color: '#BFE7D2',
+    fontSize: 12,
   },
 });

@@ -1,8 +1,12 @@
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+
+import { getUserIdFromToken } from '@/services/authStorage';
 
 export default function WelcomeScreen() {
   const { width } = useWindowDimensions();
+  const [checkingSession, setCheckingSession] = useState(true);
 
   let horizontalPadding = 32;
   if (width < 380) {
@@ -11,6 +15,42 @@ export default function WelcomeScreen() {
     horizontalPadding = 24;
   }
   const contentMaxWidth = width < 768 ? width - horizontalPadding * 2 : 520;
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const userId = await getUserIdFromToken();
+
+        if (userId) {
+          router.replace('/(tabs)');
+          return;
+        }
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    void restoreSession();
+  }, []);
+
+  if (checkingSession) {
+    return (
+      <View style={styles.screen}>
+        <View
+          style={[
+            styles.content,
+            {
+              maxWidth: contentMaxWidth,
+              paddingHorizontal: horizontalPadding,
+            },
+          ]}
+        >
+          <ActivityIndicator size="large" color="#1E8E3E" />
+          <Text style={styles.loadingText}>Restoring your session...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -81,5 +121,11 @@ const styles = StyleSheet.create({
     color: '#1E8E3E',
     fontSize: 16,
     fontWeight: '700',
+  },
+  loadingText: {
+    color: '#1E8E3E',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

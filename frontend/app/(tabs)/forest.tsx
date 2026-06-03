@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions, type DimensionValue } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { isAxiosError } from 'axios';
 
+import { ForestHeaderArt } from '@/components/forest-header-art';
+import { ForestTreeCardVisual } from '@/components/forest-tree-card-visual';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -38,154 +40,68 @@ const getStageLabel = (growthStage: number): string => {
   }
 };
 
-const getTreePalette = (treeType: Tree['treeType'], damaged: boolean) => {
-  if (damaged) {
-    return {
-      canopy: '#B58C56',
-      canopyBorder: '#E2C18C',
-      trunk: '#8C6944',
-      ground: '#5F4B35',
-    };
-  }
+const formatMonthLabel = (year: number, monthIndex: number): string =>
+  new Date(year, monthIndex, 1).toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric',
+  });
 
-  switch (treeType) {
-    case 'OAK':
-      return {
-        canopy: '#6AA85B',
-        canopyBorder: '#B7E38D',
-        trunk: '#7A5632',
-        ground: '#355D34',
-      };
-    case 'BIRCH':
-      return {
-        canopy: '#88C96D',
-        canopyBorder: '#D7F2A6',
-        trunk: '#D8D4C8',
-        ground: '#44633D',
-      };
-    case 'PINE':
-      return {
-        canopy: '#2E8B57',
-        canopyBorder: '#92D9B2',
-        trunk: '#765338',
-        ground: '#294E3E',
-      };
-    case 'CHERRY_BLOSSOM':
-      return {
-        canopy: '#E7A8C3',
-        canopyBorder: '#F8D6E5',
-        trunk: '#6F4A39',
-        ground: '#5B4A52',
-      };
-    case 'MAPLE':
-    default:
-      return {
-        canopy: '#E38C4E',
-        canopyBorder: '#F7C58B',
-        trunk: '#855C33',
-        ground: '#5F4D2D',
-      };
-  }
+const formatDayLabel = (isoDate: string): string =>
+  new Date(isoDate).toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+
+type ForestDayGroup = {
+  key: string;
+  label: string;
+  trees: Tree[];
 };
 
-const getTreeScale = (growthStage: number): number => {
-  switch (growthStage) {
-    case 3:
-      return 1;
-    case 2:
-      return 0.84;
-    case 1:
-      return 0.68;
-    default:
-      return 0.52;
-  }
+type ForestMonthGroup = {
+  key: string;
+  label: string;
+  year: number;
+  monthIndex: number;
+  trees: Tree[];
+  completedCount: number;
+  damagedCount: number;
+  days: ForestDayGroup[];
 };
 
-function ForestTreeCard({ tree, index }: { tree: Tree; index: number }) {
-  const palette = getTreePalette(tree.treeType, tree.damaged);
-  const scale = getTreeScale(tree.growthStage);
-  const crownSize = 72 * scale;
-  const sideCrownSize = 54 * scale;
-  const trunkHeight = 60 * scale;
-  const trunkWidth = Math.max(12, 18 * scale);
-  const topOffset = index % 3 === 1 ? 18 : index % 3 === 2 ? 8 : 0;
+function ForestTreePlot({
+  tree,
+  selected,
+  onPress,
+  width,
+}: {
+  tree: Tree;
+  selected: boolean;
+  onPress: () => void;
+  width: DimensionValue;
+}) {
+  const displayGrowthStage = tree.damaged ? tree.growthStage : 3;
 
   return (
-    <ThemedView style={[styles.treeCard, { marginTop: topOffset }]}>
-      <View style={[styles.treeScene, { backgroundColor: `${palette.ground}33` }]}>
-        <View
-          style={[
-            styles.sceneGlow,
-            {
-              backgroundColor: `${palette.canopy}55`,
-              width: 110 * scale,
-              height: 110 * scale,
-            },
-          ]}
-        />
-        <View style={styles.treeShape}>
-          <View
-            style={[
-              styles.sideCanopy,
-              styles.leftCanopy,
-              {
-                width: sideCrownSize,
-                height: sideCrownSize,
-                backgroundColor: palette.canopy,
-                borderColor: palette.canopyBorder,
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.mainCanopy,
-              {
-                width: crownSize,
-                height: crownSize,
-                backgroundColor: palette.canopy,
-                borderColor: palette.canopyBorder,
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.sideCanopy,
-              styles.rightCanopy,
-              {
-                width: sideCrownSize,
-                height: sideCrownSize,
-                backgroundColor: palette.canopy,
-                borderColor: palette.canopyBorder,
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.trunk,
-              {
-                height: trunkHeight,
-                width: trunkWidth,
-                backgroundColor: palette.trunk,
-              },
-            ]}
-          />
-        </View>
-        <View style={[styles.groundPatch, { backgroundColor: palette.ground }]} />
-      </View>
-
-      <View style={styles.treeMeta}>
-        <ThemedText type="defaultSemiBold" style={styles.treeTitle}>
-          {getTreeTypeLabel(tree.treeType)}
-        </ThemedText>
-        <ThemedText style={styles.treeSubtitle}>
-          {getStageLabel(tree.growthStage)}
-        </ThemedText>
-        <ThemedText style={styles.treeProgress}>
-          {tree.growthProgress}% growth
-          {tree.damaged ? ' • damaged' : tree.completed ? ' • completed' : ''}
-        </ThemedText>
-      </View>
-    </ThemedView>
+    <Pressable
+      style={({ pressed }) => [
+        styles.treePlot,
+        { width },
+        selected && styles.treePlotSelected,
+        pressed && styles.treePlotPressed,
+      ]}
+      onPress={onPress}
+    >
+      <ForestTreeCardVisual
+        growthStage={displayGrowthStage}
+        treeType={tree.treeType}
+        damaged={tree.damaged}
+      />
+      <ThemedText type="defaultSemiBold" style={styles.treePlotLabel}>
+        {getTreeTypeLabel(tree.treeType)}
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -194,15 +110,129 @@ export default function ForestScreen() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [trees, setTrees] = useState<Tree[]>([]);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
+  const [selectedTreeId, setSelectedTreeId] = useState<number | null>(null);
 
   const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
   const contentMaxWidth = width < 768 ? width - horizontalPadding * 2 : 980;
+  const dayColumnCount = width < 420 ? 2 : width < 768 ? 3 : width < 1100 ? 4 : 5;
+  const treePlotWidth = Math.max(
+    width < 420 ? 130 : 144,
+    Math.floor((contentMaxWidth - 18 * 2 - 10 * (dayColumnCount - 1)) / dayColumnCount),
+  );
+
   const forestTrees = useMemo(
-    () =>
-      [...trees]
-        .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
+    () => [...trees].sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     [trees],
   );
+
+  const years = useMemo(() => {
+    const uniqueYears = new Set(
+      forestTrees.map((tree) => new Date(tree.createdAt).getFullYear()),
+    );
+
+    return [...uniqueYears].sort((left, right) => right - left);
+  }, [forestTrees]);
+
+  const monthGroups = useMemo<ForestMonthGroup[]>(() => {
+    const monthMap = new Map<string, Tree[]>();
+
+    forestTrees.forEach((tree) => {
+      const date = new Date(tree.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const current = monthMap.get(key) ?? [];
+      current.push(tree);
+      monthMap.set(key, current);
+    });
+
+    return [...monthMap.entries()]
+      .map(([key, monthTrees]) => {
+        const sampleDate = new Date(monthTrees[0].createdAt);
+        const year = sampleDate.getFullYear();
+        const monthIndex = sampleDate.getMonth();
+        const dayMap = new Map<string, Tree[]>();
+
+        monthTrees.forEach((tree) => {
+          const dayKey = tree.createdAt.slice(0, 10);
+          const current = dayMap.get(dayKey) ?? [];
+          current.push(tree);
+          dayMap.set(dayKey, current);
+        });
+
+        const days = [...dayMap.entries()]
+          .sort(([left], [right]) => right.localeCompare(left))
+          .map(([dayKey, dayTrees]) => ({
+            key: dayKey,
+            label: formatDayLabel(dayKey),
+            trees: dayTrees.sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
+          }));
+
+        return {
+          key,
+          label: formatMonthLabel(year, monthIndex),
+          year,
+          monthIndex,
+          trees: monthTrees,
+          completedCount: monthTrees.filter((tree) => !tree.damaged).length,
+          damagedCount: monthTrees.filter((tree) => tree.damaged).length,
+          days,
+        };
+      })
+      .sort((left, right) => right.key.localeCompare(left.key));
+  }, [forestTrees]);
+
+  const selectedYearMonths = useMemo(
+    () => monthGroups.filter((group) => group.year === selectedYear),
+    [monthGroups, selectedYear],
+  );
+
+  const selectedMonth = useMemo(
+    () => selectedYearMonths.find((group) => group.key === selectedMonthKey) ?? selectedYearMonths[0] ?? null,
+    [selectedMonthKey, selectedYearMonths],
+  );
+
+  const selectedTree = useMemo(
+    () => selectedMonth?.trees.find((tree) => tree.id === selectedTreeId)
+      ?? selectedMonth?.trees[selectedMonth.trees.length - 1]
+      ?? null,
+    [selectedMonth, selectedTreeId],
+  );
+
+  useEffect(() => {
+    if (years.length === 0) {
+      setSelectedYear(null);
+      return;
+    }
+
+    setSelectedYear((current) => (current != null && years.includes(current) ? current : years[0]));
+  }, [years]);
+
+  useEffect(() => {
+    if (selectedYearMonths.length === 0) {
+      setSelectedMonthKey(null);
+      return;
+    }
+
+    setSelectedMonthKey((current) =>
+      current != null && selectedYearMonths.some((group) => group.key === current)
+        ? current
+        : selectedYearMonths[0].key,
+    );
+  }, [selectedYearMonths]);
+
+  useEffect(() => {
+    if (!selectedMonth || selectedMonth.trees.length === 0) {
+      setSelectedTreeId(null);
+      return;
+    }
+
+    setSelectedTreeId((current) =>
+      current != null && selectedMonth.trees.some((tree) => tree.id === current)
+        ? current
+        : selectedMonth.trees[selectedMonth.trees.length - 1].id,
+    );
+  }, [selectedMonth]);
 
   const loadForest = useCallback(async () => {
     setLoading(true);
@@ -234,10 +264,13 @@ export default function ForestScreen() {
             }
           | undefined;
 
-        setErrorMessage(data?.error || data?.message || 'Could not load your forest.');
+        console.log('Forest fetch error:', data?.error || data?.message || error.message);
       } else {
-        setErrorMessage('Could not load your forest.');
+        console.log('Forest fetch error:', error);
       }
+
+      setTrees([]);
+      setErrorMessage('');
     } finally {
       setLoading(false);
     }
@@ -253,13 +286,13 @@ export default function ForestScreen() {
     }, [loadForest]),
   );
 
-  const completedCount = forestTrees.filter((tree) => tree.completed).length;
+  const completedCount = forestTrees.filter((tree) => !tree.damaged).length;
   const damagedCount = forestTrees.filter((tree) => tree.damaged).length;
 
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D7E7D8', dark: '#102018' }}
-      headerImage={<View style={styles.headerBackdrop} />}
+      headerImage={<ForestHeaderArt />}
     >
       <ThemedView
         style={[
@@ -275,7 +308,7 @@ export default function ForestScreen() {
             Your Forest
           </ThemedText>
           <ThemedText style={styles.heroSubtitle}>
-            Every focus session leaves behind a tree. Healthy sessions keep growing. Interrupted ones stay scarred in the grove.
+            Browse the visual history of your habit consistency by year, month, and day.
           </ThemedText>
         </ThemedView>
 
@@ -307,37 +340,136 @@ export default function ForestScreen() {
           </ThemedView>
         ) : null}
 
-        {!loading && errorMessage ? (
-          <ThemedView style={styles.errorCard}>
-            <ThemedText type="defaultSemiBold" style={styles.errorTitle}>
-              Couldn&apos;t load your forest
-            </ThemedText>
-            <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
-            <Pressable style={styles.retryButton} onPress={() => void loadForest()}>
-              <ThemedText type="defaultSemiBold" style={styles.retryButtonText}>
-                Try Again
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-        ) : null}
-
         {!loading && !errorMessage && forestTrees.length === 0 ? (
-          <ThemedView style={styles.feedbackCard}>
-            <ThemedText type="defaultSemiBold" style={styles.feedbackTitle}>
-              No trees yet
-            </ThemedText>
-            <ThemedText style={styles.feedbackText}>
-              Complete a focus session and your first tree will appear here.
-            </ThemedText>
-          </ThemedView>
+            <ThemedView style={styles.feedbackCard}>
+              <ThemedText type="defaultSemiBold" style={styles.feedbackTitle}>
+                No trees yet
+              </ThemedText>
+              <ThemedText style={styles.feedbackText}>
+                Keep showing up for your habits and the forest will start recording that consistency here.
+              </ThemedText>
+            </ThemedView>
         ) : null}
 
         {!loading && !errorMessage && forestTrees.length > 0 ? (
-          <ThemedView style={styles.forestGrid}>
-            {forestTrees.map((tree, index) => (
-              <ForestTreeCard key={tree.id} tree={tree} index={index} />
-            ))}
-          </ThemedView>
+          <>
+            <ThemedView style={styles.archiveCard}>
+              <ThemedText type="subtitle" style={styles.archiveTitle}>
+                Browse by Year
+              </ThemedText>
+              <View style={styles.yearChips}>
+                {years.map((year) => (
+                  <Pressable
+                    key={year}
+                    style={({ pressed }) => [
+                      styles.yearChip,
+                      selectedYear === year && styles.yearChipSelected,
+                      pressed && styles.yearChipPressed,
+                    ]}
+                    onPress={() => setSelectedYear(year)}
+                  >
+                    <ThemedText
+                      type="defaultSemiBold"
+                      style={[
+                        styles.yearChipText,
+                        selectedYear === year && styles.yearChipTextSelected,
+                      ]}
+                    >
+                      {year}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            </ThemedView>
+
+            <ThemedView style={styles.archiveCard}>
+              <ThemedText type="subtitle" style={styles.archiveTitle}>
+                Months
+              </ThemedText>
+              <View style={styles.monthList}>
+                {selectedYearMonths.map((group) => (
+                  <Pressable
+                    key={group.key}
+                    style={({ pressed }) => [
+                      styles.monthCard,
+                      selectedMonth?.key === group.key && styles.monthCardSelected,
+                      pressed && styles.monthCardPressed,
+                    ]}
+                    onPress={() => setSelectedMonthKey(group.key)}
+                  >
+                    <View style={styles.monthCardHeader}>
+                      <ThemedText type="defaultSemiBold" style={styles.monthCardTitle}>
+                        {group.label}
+                      </ThemedText>
+                      <ThemedText style={styles.monthCardCount}>
+                        {group.trees.length} trees
+                      </ThemedText>
+                    </View>
+                    <ThemedText style={styles.monthCardMeta}>
+                      {group.completedCount} completed • {group.damagedCount} damaged • {group.days.length} active days
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            </ThemedView>
+
+            {selectedMonth ? (
+              <ThemedView style={styles.archiveCard}>
+                <ThemedText type="subtitle" style={styles.archiveTitle}>
+                  {selectedMonth.label}
+                </ThemedText>
+                <ThemedText style={styles.archiveSubtitle}>
+                  Trees are grouped by the day your habit work earned them, so busy months stay readable.
+                </ThemedText>
+
+                <View style={styles.daySections}>
+                  {selectedMonth.days.map((day) => (
+                    <View key={day.key} style={styles.daySection}>
+                      <View style={styles.dayHeader}>
+                        <ThemedText type="defaultSemiBold" style={styles.dayTitle}>
+                          {day.label}
+                        </ThemedText>
+                        <ThemedText style={styles.dayCount}>
+                          {day.trees.length} trees
+                        </ThemedText>
+                      </View>
+
+                      <View style={styles.dayGrid}>
+                        {day.trees.map((tree) => (
+                          <ForestTreePlot
+                            key={tree.id}
+                            tree={tree}
+                            width={treePlotWidth}
+                            selected={selectedTree?.id === tree.id}
+                            onPress={() => setSelectedTreeId(tree.id)}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </ThemedView>
+            ) : null}
+
+            {selectedTree ? (
+              <ThemedView style={styles.selectedTreeCard}>
+                <ThemedText type="subtitle" style={styles.selectedTreeTitle}>
+                  {getTreeTypeLabel(selectedTree.treeType)}
+                </ThemedText>
+                <ThemedText style={styles.selectedTreeSubtitle}>
+                  {selectedTree.damaged ? getStageLabel(selectedTree.growthStage) : 'Full-grown tree'}
+                </ThemedText>
+                <View style={styles.selectedTreeMetaRow}>
+                  <ThemedText style={styles.selectedTreeMeta}>
+                    {selectedTree.damaged ? `${selectedTree.growthProgress}% growth • damaged` : '100% growth • earned'}
+                  </ThemedText>
+                  <ThemedText style={styles.selectedTreeMeta}>
+                    {new Date(selectedTree.createdAt).toLocaleDateString()}
+                  </ThemedText>
+                </View>
+              </ThemedView>
+            ) : null}
+          </>
         ) : null}
       </ThemedView>
     </ParallaxScrollView>
@@ -349,17 +481,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     gap: 16,
-  },
-  headerBackdrop: {
-    position: 'absolute',
-    left: -30,
-    right: -30,
-    bottom: -30,
-    height: 180,
-    borderTopLeftRadius: 90,
-    borderTopRightRadius: 90,
-    backgroundColor: '#3D6A4F',
-    opacity: 0.35,
   },
   heroCard: {
     borderRadius: 24,
@@ -377,11 +498,13 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     backgroundColor: 'transparent',
   },
   statCard: {
     flex: 1,
+    minWidth: 150,
     borderRadius: 18,
     padding: 16,
     backgroundColor: '#163026',
@@ -394,6 +517,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: '#B7CCC2',
+    flexShrink: 1,
   },
   feedbackCard: {
     borderRadius: 20,
@@ -411,108 +535,158 @@ const styles = StyleSheet.create({
     color: '#B7CCC2',
     textAlign: 'center',
   },
-  errorCard: {
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: '#2A1717',
-    borderWidth: 1,
-    borderColor: '#6D2B2B',
-    gap: 10,
-  },
-  errorTitle: {
-    color: '#FFD9D9',
-  },
-  errorText: {
-    color: '#FFB6B6',
-  },
-  retryButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#EAF6EE',
-    borderColor: '#1E8E3E',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  retryButtonText: {
-    color: '#1E8E3E',
-  },
-  forestGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 14,
-    backgroundColor: 'transparent',
-  },
-  treeCard: {
-    width: '48%',
-    minWidth: 160,
-    flexGrow: 1,
-    borderRadius: 20,
-    padding: 14,
+  archiveCard: {
+    borderRadius: 22,
+    padding: 18,
     backgroundColor: '#14251F',
     borderWidth: 1,
     borderColor: '#244338',
-    gap: 12,
+    gap: 14,
   },
-  treeScene: {
-    height: 180,
-    borderRadius: 18,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  sceneGlow: {
-    position: 'absolute',
-    top: 18,
-    borderRadius: 999,
-  },
-  treeShape: {
-    width: 124,
-    height: 132,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    backgroundColor: 'transparent',
-    position: 'relative',
-  },
-  mainCanopy: {
-    position: 'absolute',
-    top: 8,
-    borderRadius: 999,
-    borderWidth: 2,
-  },
-  sideCanopy: {
-    position: 'absolute',
-    top: 34,
-    borderRadius: 999,
-    borderWidth: 2,
-  },
-  leftCanopy: {
-    left: 10,
-  },
-  rightCanopy: {
-    right: 10,
-  },
-  trunk: {
-    borderRadius: 999,
-    marginBottom: 10,
-  },
-  groundPatch: {
-    width: '100%',
-    height: 26,
-  },
-  treeMeta: {
-    gap: 4,
-    backgroundColor: 'transparent',
-  },
-  treeTitle: {
+  archiveTitle: {
     color: '#EAF6F0',
   },
-  treeSubtitle: {
+  archiveSubtitle: {
     color: '#A7C8B7',
   },
-  treeProgress: {
-    color: '#7FA08E',
+  yearChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  yearChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#355648',
+    backgroundColor: '#172923',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+  },
+  yearChipSelected: {
+    backgroundColor: '#234233',
+    borderColor: '#63C174',
+  },
+  yearChipPressed: {
+    opacity: 0.9,
+  },
+  yearChipText: {
+    color: '#B7CCC2',
+  },
+  yearChipTextSelected: {
+    color: '#F3FBF6',
+  },
+  monthList: {
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  monthCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2C4B3F',
+    backgroundColor: '#182D24',
+    padding: 14,
+    gap: 6,
+  },
+  monthCardSelected: {
+    borderColor: '#63C174',
+    backgroundColor: '#1E382C',
+  },
+  monthCardPressed: {
+    opacity: 0.92,
+  },
+  monthCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  monthCardTitle: {
+    color: '#EAF6F0',
+    flex: 1,
+  },
+  monthCardCount: {
+    color: '#7EE081',
+  },
+  monthCardMeta: {
+    color: '#8FB4A2',
+  },
+  daySections: {
+    gap: 16,
+    backgroundColor: 'transparent',
+  },
+  daySection: {
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  dayTitle: {
+    color: '#DDEEE4',
+  },
+  dayCount: {
+    color: '#8FB4A2',
+  },
+  dayGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 10,
+    rowGap: 10,
+    backgroundColor: 'transparent',
+  },
+  treePlot: {
+    borderRadius: 18,
+    padding: 8,
+    minWidth: 0,
+    backgroundColor: 'transparent',
+    gap: 6,
+  },
+  treePlotSelected: {
+    backgroundColor: '#183126',
+    borderWidth: 1,
+    borderColor: '#4FAF7A',
+  },
+  treePlotPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.985 }],
+  },
+  treePlotLabel: {
+    color: '#DDEEE4',
+    textAlign: 'center',
     fontSize: 13,
+    lineHeight: 18,
+    paddingHorizontal: 4,
+  },
+  selectedTreeCard: {
+    borderRadius: 20,
+    padding: 18,
+    backgroundColor: '#14251F',
+    borderWidth: 1,
+    borderColor: '#244338',
+    gap: 8,
+  },
+  selectedTreeTitle: {
+    color: '#EAF6F0',
+  },
+  selectedTreeSubtitle: {
+    color: '#A7C8B7',
+  },
+  selectedTreeMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    backgroundColor: 'transparent',
+  },
+  selectedTreeMeta: {
+    color: '#7FA08E',
+    flexShrink: 1,
   },
 });

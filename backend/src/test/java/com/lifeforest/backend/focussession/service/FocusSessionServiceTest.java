@@ -16,6 +16,7 @@ import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
 import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.task.domain.Task;
 import com.lifeforest.backend.task.domain.TaskCategory;
+import com.lifeforest.backend.task.domain.TaskType;
 import com.lifeforest.backend.task.repository.TaskRepository;
 import com.lifeforest.backend.tree.domain.TreeType;
 import com.lifeforest.backend.tree.service.TreeService;
@@ -59,8 +60,14 @@ class FocusSessionServiceTest {
 
     @Test
     void completeStoresEndTimeAndDuration() {
+        Task task = Task.builder()
+                .id(41L)
+                .taskType(TaskType.ONE_TIME)
+                .completed(false)
+                .build();
         FocusSession focusSession = FocusSession.builder()
                 .id(14L)
+                .task(task)
                 .startedAt(Instant.now().minus(Duration.ofMinutes(32)).minusSeconds(5))
                 .completed(false)
                 .build();
@@ -72,8 +79,34 @@ class FocusSessionServiceTest {
 
         assertSame(focusSession, result);
         assertTrue(result.isCompleted());
+        assertTrue(task.isCompleted());
         assertNotNull(result.getEndedAt());
         assertEquals(32, result.getDuration());
+        verify(focusSessionRepository).save(focusSession);
+        verify(treeService).createForCompletedSession(focusSession);
+    }
+
+    @Test
+    void completeLeavesRepeatingTaskAvailable() {
+        Task task = Task.builder()
+                .id(42L)
+                .taskType(TaskType.REPEATING)
+                .completed(false)
+                .build();
+        FocusSession focusSession = FocusSession.builder()
+                .id(21L)
+                .task(task)
+                .startedAt(Instant.now().minus(Duration.ofMinutes(18)))
+                .completed(false)
+                .build();
+
+        when(focusSessionRepository.findById(21L)).thenReturn(Optional.of(focusSession));
+        when(focusSessionRepository.save(focusSession)).thenReturn(focusSession);
+
+        FocusSession result = focusSessionService.complete(21L);
+
+        assertSame(focusSession, result);
+        assertFalse(task.isCompleted());
         verify(focusSessionRepository).save(focusSession);
         verify(treeService).createForCompletedSession(focusSession);
     }
@@ -208,6 +241,7 @@ class FocusSessionServiceTest {
                 .id(33L)
                 .routine(routine)
                 .category(TaskCategory.CREATIVE)
+                .taskType(TaskType.ONE_TIME)
                 .build();
 
         when(userRepository.findById(9L)).thenReturn(Optional.of(user));
@@ -220,5 +254,29 @@ class FocusSessionServiceTest {
 
         assertEquals(TreeType.CHERRY_BLOSSOM, result.getTreeType());
         verify(treeService).determineTreeType(task);
+    }
+
+    @Test
+    void startRejectsAlreadyCompletedOneTimeTask() {
+        User user = User.builder().id(10L).build();
+        Routine routine = Routine.builder()
+                .id(6L)
+                .user(user)
+                .build();
+        Task task = Task.builder()
+                .id(34L)
+                .routine(routine)
+                .category(TaskCategory.WORK)
+                .taskType(TaskType.ONE_TIME)
+                .completed(true)
+                .build();
+
+        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+        when(taskRepository.findById(34L)).thenReturn(Optional.of(task));
+
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> focusSessionService.start(10L, 34L));
+
+        assertEquals("This one-time task is already completed.", exception.getMessage());
     }
 }

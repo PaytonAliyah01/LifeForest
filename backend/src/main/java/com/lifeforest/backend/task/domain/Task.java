@@ -5,6 +5,7 @@ import com.lifeforest.backend.routine.domain.Routine;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -16,7 +17,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Table;
+import jakarta.persistence.JoinTable;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -60,6 +63,20 @@ public class Task {
     @Column(nullable = false, length = 30)
     private TaskCategory category;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private TaskType taskType;
+
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "task_repeat_days", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "repeat_day", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private Set<RepeatDay> repeatDays = new HashSet<>();
+
+    @Column(length = 20)
+    private String preferredTime;
+
     @Column(nullable = false)
     private boolean completed;
 
@@ -76,6 +93,9 @@ public class Task {
         this.updatedAt = now;
         if (this.category == null) {
             this.category = TaskCategory.GENERAL;
+        }
+        if (this.taskType == null) {
+            this.taskType = TaskType.ONE_TIME;
         }
     }
 

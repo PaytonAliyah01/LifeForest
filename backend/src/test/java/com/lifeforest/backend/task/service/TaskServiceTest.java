@@ -12,6 +12,8 @@ import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.routine.repository.RoutineRepository;
 import com.lifeforest.backend.task.domain.Task;
 import com.lifeforest.backend.task.domain.TaskCategory;
+import com.lifeforest.backend.task.domain.RepeatDay;
+import com.lifeforest.backend.task.domain.TaskType;
 import com.lifeforest.backend.task.dto.request.TaskCreateRequestDto;
 import com.lifeforest.backend.task.dto.response.TaskResponseDto;
 import com.lifeforest.backend.task.mapper.TaskMapper;
@@ -19,6 +21,7 @@ import com.lifeforest.backend.task.repository.TaskRepository;
 import com.lifeforest.backend.user.domain.User;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +62,10 @@ class TaskServiceTest {
             " Prepare desk ",
             " Clear the workspace ",
             25,
-            TaskCategory.WORK
+            TaskCategory.WORK,
+            TaskType.REPEATING,
+            Set.of(RepeatDay.MONDAY, RepeatDay.WEDNESDAY),
+            "07:30"
         );
 
         when(routineRepository.findById(10L)).thenReturn(Optional.of(routine));
@@ -77,6 +83,9 @@ class TaskServiceTest {
         assertEquals("Clear the workspace", response.description());
         assertEquals(25, response.duration());
         assertEquals(TaskCategory.WORK, response.category());
+        assertEquals(TaskType.REPEATING, response.taskType());
+        assertEquals(Set.of(RepeatDay.MONDAY, RepeatDay.WEDNESDAY), response.repeatDays());
+        assertEquals("07:30", response.preferredTime());
         assertEquals(1, routine.getTasks().size());
 
         Task linkedTask = routine.getTasks().iterator().next();
@@ -88,6 +97,9 @@ class TaskServiceTest {
         assertEquals("Prepare desk", taskCaptor.getValue().getTitle());
         assertEquals(25, taskCaptor.getValue().getDuration());
         assertEquals(TaskCategory.WORK, taskCaptor.getValue().getCategory());
+        assertEquals(TaskType.REPEATING, taskCaptor.getValue().getTaskType());
+        assertEquals(Set.of(RepeatDay.MONDAY, RepeatDay.WEDNESDAY), taskCaptor.getValue().getRepeatDays());
+        assertEquals("07:30", taskCaptor.getValue().getPreferredTime());
     }
 
     @Test

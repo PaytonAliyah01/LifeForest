@@ -4,12 +4,11 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { isAxiosError } from 'axios';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { clearToken, getUserIdFromToken } from '@/services/authStorage';
-import { getRoutinesByUser } from '@/services/routinesApi';
 import { getUserById, type User } from '@/services/usersApi';
 
 export default function AccountScreen() {
@@ -17,8 +16,6 @@ export default function AccountScreen() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  const [routineCount, setRoutineCount] = useState<number>(0);
-  const [completedCount, setCompletedCount] = useState<number>(0);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
@@ -33,20 +30,12 @@ export default function AccountScreen() {
 
       if (!userId) {
         setUser(null);
-        setRoutineCount(0);
-        setCompletedCount(0);
         setErrorMessage('Log in to load your account details.');
         return;
       }
 
-      const [userResponse, routinesResponse] = await Promise.all([
-        getUserById(userId),
-        getRoutinesByUser(userId),
-      ]);
-
+      const userResponse = await getUserById(userId);
       setUser(userResponse);
-      setRoutineCount(routinesResponse.length);
-      setCompletedCount(routinesResponse.filter((routine) => routine.completed).length);
     } catch (error) {
       if (isAxiosError(error)) {
         const data = error.response?.data as
@@ -89,14 +78,7 @@ export default function AccountScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#DDEEDF', dark: '#11211A' }}
-      headerImage={
-        <IconSymbol
-          size={280}
-          color="#7FA08E"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }
+      headerImage={<ForestHeaderArt />}
     >
       <ThemedView
         style={[
@@ -112,7 +94,7 @@ export default function AccountScreen() {
             Your Account
           </ThemedText>
           <ThemedText style={styles.heroSubtitle}>
-            This screen is now loaded from your backend API instead of the Expo starter content.
+            Keep your profile details and your sign-in session in one simple place.
           </ThemedText>
         </ThemedView>
 
@@ -159,29 +141,9 @@ export default function AccountScreen() {
             </ThemedView>
 
             <ThemedView style={styles.sectionCard}>
-              <ThemedText type="subtitle">Routine Summary</ThemedText>
-
-              <View style={styles.statsRow}>
-                <ThemedView style={styles.statCard}>
-                  <ThemedText type="title" style={styles.statNumber}>
-                    {routineCount}
-                  </ThemedText>
-                  <ThemedText style={styles.statLabel}>Total routines</ThemedText>
-                </ThemedView>
-
-                <ThemedView style={styles.statCard}>
-                  <ThemedText type="title" style={styles.statNumber}>
-                    {completedCount}
-                  </ThemedText>
-                  <ThemedText style={styles.statLabel}>Completed</ThemedText>
-                </ThemedView>
-              </View>
-            </ThemedView>
-
-            <ThemedView style={styles.sectionCard}>
               <ThemedText type="subtitle">Session</ThemedText>
               <ThemedText style={styles.sessionText}>
-                Your token is stored locally and attached automatically to API requests.
+                Your token is stored locally and attached automatically to API requests across the app.
               </ThemedText>
 
               <Pressable
@@ -228,6 +190,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     color: '#B7CCC2',
+    lineHeight: 22,
   },
   loadingCard: {
     borderRadius: 20,
@@ -273,28 +236,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textTransform: 'uppercase',
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: 'transparent',
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    backgroundColor: '#1B3028',
-    borderWidth: 1,
-    borderColor: '#2A4A3D',
-    gap: 6,
-  },
-  statNumber: {
-    color: '#7EE081',
-  },
-  statLabel: {
-    color: '#B7CCC2',
-  },
   sessionText: {
     color: '#B7CCC2',
+    lineHeight: 21,
   },
   secondaryButton: {
     alignSelf: 'flex-start',
@@ -328,11 +272,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
-  },
-  headerImage: {
-    color: '#7FA08E',
-    bottom: -90,
-    left: -30,
-    position: 'absolute',
   },
 });

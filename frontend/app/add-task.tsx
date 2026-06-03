@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   ActivityIndicator,
@@ -15,7 +15,7 @@ import { isAxiosError } from 'axios';
 import { api } from '@/services/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { createTask, type TaskCategory } from '@/services/tasksApi';
+import { createTask, type RepeatDay, type TaskCategory, type TaskType } from '@/services/tasksApi';
 
 const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
   { value: 'GENERAL', label: 'General' },
@@ -23,6 +23,29 @@ const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
   { value: 'STUDY', label: 'Study' },
   { value: 'HEALTH', label: 'Health' },
   { value: 'CREATIVE', label: 'Creative' },
+];
+
+const TASK_TYPE_OPTIONS: Array<{ value: TaskType; label: string; helper: string }> = [
+  {
+    value: 'ONE_TIME',
+    label: 'One-time',
+    helper: 'Completes after one finished focus session.',
+  },
+  {
+    value: 'REPEATING',
+    label: 'Repeating',
+    helper: 'Can keep giving you a new tree each session.',
+  },
+];
+
+const REPEAT_DAY_OPTIONS: Array<{ value: RepeatDay; label: string }> = [
+  { value: 'MONDAY', label: 'Mon' },
+  { value: 'TUESDAY', label: 'Tue' },
+  { value: 'WEDNESDAY', label: 'Wed' },
+  { value: 'THURSDAY', label: 'Thu' },
+  { value: 'FRIDAY', label: 'Fri' },
+  { value: 'SATURDAY', label: 'Sat' },
+  { value: 'SUNDAY', label: 'Sun' },
 ];
 
 const parseTextParam = (value: string | string[] | undefined): string => {
@@ -43,10 +66,23 @@ export default function AddTaskScreen() {
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
   const [category, setCategory] = useState<TaskCategory>('GENERAL');
+  const [taskType, setTaskType] = useState<TaskType>('ONE_TIME');
+  const [repeatDays, setRepeatDays] = useState<RepeatDay[]>([]);
+  const [preferredTime, setPreferredTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const descriptionInputRef = useRef<TextInput | null>(null);
+  const durationInputRef = useRef<TextInput | null>(null);
 
   const canCreate = Number.isFinite(routineId) && title.trim().length > 0;
+
+  const toggleRepeatDay = (day: RepeatDay) => {
+    setRepeatDays((currentDays) =>
+      currentDays.includes(day)
+        ? currentDays.filter((currentDay) => currentDay !== day)
+        : [...currentDays, day],
+    );
+  };
 
   const handleCreateTask = async () => {
     if (!canCreate) {
@@ -76,6 +112,9 @@ export default function AddTaskScreen() {
           description: description.trim() || null,
           duration: parsedDuration,
           category,
+          taskType,
+          repeatDays: taskType === 'REPEATING' ? repeatDays : [],
+          preferredTime: taskType === 'REPEATING' ? preferredTime.trim() || null : null,
         },
       });
 
@@ -139,9 +178,13 @@ export default function AddTaskScreen() {
               placeholderTextColor="#7A7A7A"
               value={title}
               onChangeText={setTitle}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => descriptionInputRef.current?.focus()}
             />
 
             <TextInput
+              ref={descriptionInputRef}
               style={[styles.input, styles.textArea]}
               placeholder="Description (optional)"
               placeholderTextColor="#7A7A7A"
@@ -150,15 +193,21 @@ export default function AddTaskScreen() {
               textAlignVertical="top"
               value={description}
               onChangeText={setDescription}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => durationInputRef.current?.focus()}
             />
 
             <TextInput
+              ref={durationInputRef}
               style={styles.input}
               placeholder="Duration in minutes (optional)"
               placeholderTextColor="#7A7A7A"
               keyboardType="number-pad"
               value={duration}
               onChangeText={setDuration}
+              returnKeyType="done"
+              onSubmitEditing={() => void handleCreateTask()}
             />
 
             <View style={styles.categorySection}>
@@ -189,6 +238,89 @@ export default function AddTaskScreen() {
                 ))}
               </View>
             </View>
+
+            <View style={styles.categorySection}>
+              <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
+                Task type
+              </ThemedText>
+              <View style={styles.typeOptions}>
+                {TASK_TYPE_OPTIONS.map((option) => {
+                  const selected = taskType === option.value;
+
+                  return (
+                    <Pressable
+                      key={option.value}
+                      style={({ pressed }) => [
+                        styles.typeCard,
+                        selected && styles.typeCardSelected,
+                        pressed && styles.buttonPressed,
+                      ]}
+                      onPress={() => setTaskType(option.value)}
+                    >
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={[styles.typeCardTitle, selected && styles.typeCardTitleSelected]}
+                      >
+                        {option.label}
+                      </ThemedText>
+                      <ThemedText
+                        style={[styles.typeCardHelper, selected && styles.typeCardHelperSelected]}
+                      >
+                        {option.helper}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            {taskType === 'REPEATING' ? (
+              <>
+                <View style={styles.categorySection}>
+                  <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
+                    Repeat on
+                  </ThemedText>
+                  <ThemedText style={styles.helperText}>
+                    Leave all days empty if this habit should be due every day.
+                  </ThemedText>
+                  <View style={styles.categoryOptions}>
+                    {REPEAT_DAY_OPTIONS.map((option) => {
+                      const selected = repeatDays.includes(option.value);
+
+                      return (
+                        <Pressable
+                          key={option.value}
+                          style={({ pressed }) => [
+                            styles.categoryChip,
+                            selected && styles.categoryChipSelected,
+                            pressed && styles.buttonPressed,
+                          ]}
+                          onPress={() => toggleRepeatDay(option.value)}
+                        >
+                          <ThemedText
+                            type="defaultSemiBold"
+                            style={[
+                              styles.categoryChipText,
+                              selected && styles.categoryChipTextSelected,
+                            ]}
+                          >
+                            {option.label}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Preferred time (for example 07:30 or Evening)"
+                  placeholderTextColor="#7A7A7A"
+                  value={preferredTime}
+                  onChangeText={setPreferredTime}
+                />
+              </>
+            ) : null}
 
             <View style={styles.actions}>
               <Pressable
@@ -291,6 +423,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
+  typeOptions: {
+    gap: 10,
+  },
   categoryChip: {
     borderRadius: 999,
     borderWidth: 1,
@@ -308,6 +443,33 @@ const styles = StyleSheet.create({
   },
   categoryChipTextSelected: {
     color: '#EAF6F0',
+  },
+  typeCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#355648',
+    backgroundColor: '#1A2D26',
+    padding: 14,
+    gap: 4,
+  },
+  typeCardSelected: {
+    borderColor: '#63C174',
+    backgroundColor: '#234233',
+  },
+  typeCardTitle: {
+    color: '#EAF6F0',
+  },
+  typeCardTitleSelected: {
+    color: '#F5FFF7',
+  },
+  typeCardHelper: {
+    color: '#98B7A7',
+  },
+  typeCardHelperSelected: {
+    color: '#CFE7D7',
+  },
+  helperText: {
+    color: '#98B7A7',
   },
   actions: {
     flexDirection: 'row',

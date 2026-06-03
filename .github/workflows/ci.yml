@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
+  backend-build:
     runs-on: ubuntu-latest
 
     defaults:
@@ -33,9 +33,50 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build backend
+        run: ./gradlew assemble
+
+      - name: Upload backend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-artifacts
+          path: backend/build/libs/*.jar
+
+  backend-test:
+    runs-on: ubuntu-latest
+    needs: backend-build
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run backend tests
         run: ./gradlew test
 
-  frontend:
+      - name: Run OWASP Dependency-Check
+        run: ./gradlew dependencyCheckAnalyze
+
+      - name: Upload OWASP Dependency-Check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-owasp-dependency-check
+          path: backend/build/reports/dependency-check-report.*
+
+  frontend-build:
     runs-on: ubuntu-latest
 
     defaults:
@@ -58,6 +99,34 @@ jobs:
 
       - name: Run frontend lint
         run: npm run lint
-      
+
       - name: Run frontend type check
-        run: npx tsc --noEmit
+        run: npm run typecheck
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    needs: frontend-build
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run frontend tests if present
+        run: npm run test --if-present
+
+      - name: Run frontend dependency audit
+        run: npm audit --audit-level=high

@@ -2,6 +2,8 @@ package com.lifeforest.backend.focussession.controller;
 
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.dto.request.FocusSessionStartRequestDto;
+import com.lifeforest.backend.focussession.dto.response.FocusSessionResponseDto;
+import com.lifeforest.backend.focussession.mapper.FocusSessionMapper;
 import com.lifeforest.backend.focussession.service.FocusSessionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,56 +25,63 @@ import org.springframework.web.bind.annotation.RestController;
 public class FocusSessionController {
 
     private final FocusSessionService focusSessionService;
+    private final FocusSessionMapper focusSessionMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FocusSession createFocusSession(@RequestBody FocusSession focusSession) {
-        return focusSessionService.create(focusSession);
+    public FocusSessionResponseDto createFocusSession(@RequestBody FocusSession focusSession) {
+        return focusSessionMapper.toResponseDto(focusSessionService.create(focusSession));
     }
 
     @PostMapping("/start")
     @ResponseStatus(HttpStatus.CREATED)
-    public FocusSession startFocusSession(@RequestBody FocusSessionStartRequestDto dto) {
-        return focusSessionService.start(dto.userId(), dto.taskId());
+    public FocusSessionResponseDto startFocusSession(@RequestBody FocusSessionStartRequestDto dto) {
+        return focusSessionMapper.toResponseDto(focusSessionService.start(dto.userId(), dto.taskId()));
     }
 
     @PostMapping("/{id}/complete")
-    public FocusSession completeFocusSession(@PathVariable Long id) {
-        return focusSessionService.complete(id);
+    public FocusSessionResponseDto completeFocusSession(@PathVariable Long id) {
+        return focusSessionMapper.toResponseDto(focusSessionService.complete(id));
     }
 
     @PostMapping("/{id}/interrupt")
-    public FocusSession interruptFocusSession(@PathVariable Long id) {
-        return focusSessionService.interrupt(id);
+    public FocusSessionResponseDto interruptFocusSession(@PathVariable Long id) {
+        return focusSessionMapper.toResponseDto(focusSessionService.interrupt(id));
     }
 
     @GetMapping
-    public List<FocusSession> getFocusSessions(
+    public List<FocusSessionResponseDto> getFocusSessions(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long taskId
     ) {
         if (userId != null) {
-            return focusSessionService.getAllByUser(userId);
+            return focusSessionService.getAllByUser(userId).stream()
+                    .map(focusSessionMapper::toResponseDto)
+                    .toList();
         }
 
         if (taskId != null) {
-            return focusSessionService.getAllByTask(taskId);
+            return focusSessionService.getAllByTask(taskId).stream()
+                    .map(focusSessionMapper::toResponseDto)
+                    .toList();
         }
 
-        return focusSessionService.getAll();
+        return focusSessionService.getAll().stream()
+                .map(focusSessionMapper::toResponseDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public FocusSession getFocusSessionById(@PathVariable Long id) {
-        return focusSessionService.getById(id);
+    public FocusSessionResponseDto getFocusSessionById(@PathVariable Long id) {
+        return focusSessionMapper.toResponseDto(focusSessionService.getById(id));
     }
 
     @PutMapping("/{id}")
-    public FocusSession updateFocusSession(
+    public FocusSessionResponseDto updateFocusSession(
             @PathVariable Long id,
             @RequestBody FocusSession focusSession
     ) {
-        return focusSessionService.update(id, focusSession);
+        return focusSessionMapper.toResponseDto(focusSessionService.update(id, focusSession));
     }
 
     @DeleteMapping("/{id}")

@@ -5,6 +5,7 @@ import com.lifeforest.backend.focussession.exception.FocusSessionInterruptedExce
 import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
 import com.lifeforest.backend.task.domain.Task;
+import com.lifeforest.backend.task.domain.TaskType;
 import com.lifeforest.backend.task.exception.TaskNotFoundException;
 import com.lifeforest.backend.task.repository.TaskRepository;
 import com.lifeforest.backend.tree.service.TreeService;
@@ -42,6 +43,7 @@ public class FocusSessionService {
         Task task = taskId == null ? null : loadTask(taskId);
 
         validateTaskOwnership(user, task);
+        validateTaskAvailability(task);
 
         FocusSession focusSession = FocusSession.builder()
                 .user(user)
@@ -74,6 +76,7 @@ public class FocusSessionService {
         focusSession.setDuration(calculateDurationMinutes(focusSession.getStartedAt(), endedAt));
 
         FocusSession savedSession = focusSessionRepository.save(focusSession);
+        updateTaskCompletion(savedSession.getTask());
         treeService.createForCompletedSession(savedSession);
         return savedSession;
     }
@@ -202,6 +205,28 @@ public class FocusSessionService {
         Long taskOwnerId = task.getRoutine().getUser().getId();
         if (!taskOwnerId.equals(user.getId())) {
             throw new IllegalArgumentException("Task does not belong to the selected user.");
+        }
+    }
+
+    private void validateTaskAvailability(Task task) {
+        if (task == null) {
+            return;
+        }
+
+        if (task.getTaskType() == TaskType.ONE_TIME && task.isCompleted()) {
+            throw new IllegalArgumentException("This one-time task is already completed.");
+        }
+    }
+
+    private void updateTaskCompletion(Task task) {
+        if (task == null) {
+            return;
+        }
+
+        if (task.getTaskType() == TaskType.ONE_TIME) {
+            task.setCompleted(true);
+        } else {
+            task.setCompleted(false);
         }
     }
 

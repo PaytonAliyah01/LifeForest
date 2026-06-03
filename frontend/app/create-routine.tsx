@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { isAxiosError } from 'axios';
@@ -19,6 +20,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function CreateRoutineScreen() {
+  const { width } = useWindowDimensions();
   const descriptionInputRef = useRef<TextInput | null>(null);
   const [tokenUserId, setTokenUserId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
@@ -27,6 +29,8 @@ export default function CreateRoutineScreen() {
   const [prefillingUserId, setPrefillingUserId] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const horizontalPadding = width < 380 ? 16 : width < 768 ? 24 : 32;
+  const cardMaxWidth = width < 768 ? width - horizontalPadding * 2 : 520;
 
   useEffect(() => {
     const prefillUserId = async () => {
@@ -102,12 +106,12 @@ export default function CreateRoutineScreen() {
       keyboardVerticalOffset={24}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
-        <ThemedView style={styles.card}>
+        <ThemedView style={[styles.card, { maxWidth: cardMaxWidth }]}>
           <ThemedText type="title" style={styles.title}>
             Create Routine
           </ThemedText>
@@ -190,10 +194,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingTop: 24,
-    paddingHorizontal: 24,
     paddingBottom: 72,
   },
   card: {
+    width: '100%',
+    alignSelf: 'center',
     borderRadius: 24,
     padding: 24,
     backgroundColor: '#14251F',

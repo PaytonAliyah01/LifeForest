@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.dto.request.FocusSessionStartRequestDto;
+import com.lifeforest.backend.focussession.dto.response.FocusSessionResponseDto;
+import com.lifeforest.backend.focussession.mapper.FocusSessionMapper;
 import com.lifeforest.backend.focussession.service.FocusSessionService;
 import com.lifeforest.backend.task.domain.Task;
 import com.lifeforest.backend.user.domain.User;
@@ -22,11 +24,13 @@ class FocusSessionControllerTest {
     @Mock
     private FocusSessionService focusSessionService;
 
+    private FocusSessionMapper focusSessionMapper;
     private FocusSessionController focusSessionController;
 
     @BeforeEach
     void setUp() {
-        focusSessionController = new FocusSessionController(focusSessionService);
+        focusSessionMapper = new FocusSessionMapper();
+        focusSessionController = new FocusSessionController(focusSessionService, focusSessionMapper);
     }
 
     @Test
@@ -44,9 +48,12 @@ class FocusSessionControllerTest {
 
         when(focusSessionService.start(5L, 9L)).thenReturn(response);
 
-        FocusSession result = focusSessionController.startFocusSession(request);
+        FocusSessionResponseDto result = focusSessionController.startFocusSession(request);
 
-        assertEquals(response, result);
+        assertEquals(14L, result.id());
+        assertEquals(5L, result.userId());
+        assertEquals(9L, result.taskId());
+        assertEquals(false, result.completed());
         verify(focusSessionService).start(5L, 9L);
     }
 
@@ -66,9 +73,11 @@ class FocusSessionControllerTest {
 
         when(focusSessionService.complete(14L)).thenReturn(response);
 
-        FocusSession result = focusSessionController.completeFocusSession(14L);
+        FocusSessionResponseDto result = focusSessionController.completeFocusSession(14L);
 
-        assertEquals(response, result);
+        assertEquals(14L, result.id());
+        assertEquals(30, result.duration());
+        assertEquals(true, result.completed());
         verify(focusSessionService).complete(14L);
     }
 
@@ -89,9 +98,11 @@ class FocusSessionControllerTest {
 
         when(focusSessionService.interrupt(14L)).thenReturn(response);
 
-        FocusSession result = focusSessionController.interruptFocusSession(14L);
+        FocusSessionResponseDto result = focusSessionController.interruptFocusSession(14L);
 
-        assertEquals(response, result);
+        assertEquals(14L, result.id());
+        assertEquals(10, result.duration());
+        assertEquals(true, result.interrupted());
         verify(focusSessionService).interrupt(14L);
     }
 }

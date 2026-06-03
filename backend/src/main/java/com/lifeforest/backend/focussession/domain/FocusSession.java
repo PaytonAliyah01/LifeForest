@@ -1,5 +1,6 @@
 package com.lifeforest.backend.focussession.domain;
 
+import com.lifeforest.backend.reflection.domain.Reflection;
 import com.lifeforest.backend.task.domain.Task;
 import com.lifeforest.backend.tree.domain.Tree;
 import com.lifeforest.backend.tree.domain.TreeType;
@@ -52,6 +53,9 @@ public class FocusSession {
 
     @OneToOne(mappedBy = "focusSession", fetch = FetchType.LAZY)
     private Tree tree;
+
+    @OneToOne(mappedBy = "focusSession", fetch = FetchType.LAZY)
+    private Reflection reflection;
 
     @Column(nullable = false)
     private Instant startedAt;

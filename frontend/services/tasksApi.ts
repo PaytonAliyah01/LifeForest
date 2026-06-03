@@ -1,6 +1,15 @@
 import { api } from '@/services/api';
 
 export type TaskCategory = 'GENERAL' | 'WORK' | 'STUDY' | 'HEALTH' | 'CREATIVE';
+export type TaskType = 'ONE_TIME' | 'REPEATING';
+export type RepeatDay =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
 
 export type Task = {
   id: number;
@@ -9,6 +18,9 @@ export type Task = {
   description: string | null;
   duration: number | null;
   category: TaskCategory;
+  taskType: TaskType;
+  repeatDays: RepeatDay[];
+  preferredTime: string | null;
   completed: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -21,6 +33,9 @@ type CreateTaskPayload = {
     description: string | null;
     duration: number | null;
     category: TaskCategory;
+    taskType: TaskType;
+    repeatDays: RepeatDay[];
+    preferredTime: string | null;
   };
 };
 
@@ -29,6 +44,9 @@ type UpdateTaskPayload = {
   description: string | null;
   duration: number | null;
   category: TaskCategory;
+  taskType: TaskType;
+  repeatDays: RepeatDay[];
+  preferredTime: string | null;
   completed: boolean;
 };
 

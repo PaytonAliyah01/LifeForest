@@ -8,8 +8,11 @@ import com.lifeforest.backend.task.dto.request.TaskCreateForRoutineRequestDto;
 import com.lifeforest.backend.task.dto.request.TaskCreateRequestDto;
 import com.lifeforest.backend.task.dto.response.TaskResponseDto;
 import com.lifeforest.backend.task.domain.TaskCategory;
+import com.lifeforest.backend.task.domain.RepeatDay;
+import com.lifeforest.backend.task.domain.TaskType;
 import com.lifeforest.backend.task.service.TaskService;
 import java.time.Instant;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +38,10 @@ class PublicTaskControllerTest {
             "Prepare desk",
             "Clear distractions before focus time",
             15,
-            TaskCategory.GENERAL
+            TaskCategory.GENERAL,
+            TaskType.ONE_TIME,
+            Set.of(),
+            null
         );
         TaskCreateForRoutineRequestDto request = new TaskCreateForRoutineRequestDto(8L, taskRequest);
 
@@ -46,6 +52,9 @@ class PublicTaskControllerTest {
             "Clear distractions before focus time",
             15,
             TaskCategory.GENERAL,
+            TaskType.ONE_TIME,
+            Set.of(),
+            null,
             false,
             Instant.parse("2026-05-08T12:00:00Z"),
             Instant.parse("2026-05-08T12:00:00Z")
