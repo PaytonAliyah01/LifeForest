@@ -54,6 +54,10 @@ tasks.named('bootJar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+tasks.named('jar') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 dependencyCheck {
     failBuildOnCVSS = 7.0
     formats = ['HTML', 'JSON']

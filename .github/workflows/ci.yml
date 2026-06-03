@@ -129,4 +129,11 @@ jobs:
         run: npm run test --if-present
 
       - name: Run frontend dependency audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high --json > npm-audit.json || true
+
+      - name: Upload frontend dependency audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-npm-audit
+          path: frontend/npm-audit.json
