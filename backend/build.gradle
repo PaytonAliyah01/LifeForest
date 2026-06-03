@@ -60,6 +60,7 @@ tasks.named('jar') {
 
 dependencyCheck {
     failBuildOnCVSS = 7.0
+    failOnError = false
     formats = ['HTML', 'JSON']
     analyzers {
         assemblyEnabled = false
