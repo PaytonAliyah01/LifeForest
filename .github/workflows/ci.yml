@@ -137,3 +137,49 @@ jobs:
         with:
           name: frontend-npm-audit
           path: frontend/npm-audit.json
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_HOST_URL != '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Make gradlew executable
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Generate backend coverage report
+        working-directory: backend
+        run: ./gradlew test jacocoTestReport
+
+      - name: Run SonarQube analysis
+        uses: SonarSource/sonarqube-scan-action@v5.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true

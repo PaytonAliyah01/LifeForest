@@ -67,6 +67,11 @@ class AnalyticsControllerIntegrationTest {
 
     @Test
     void getAnalyticsReturnsProductivityMetricsForUser() throws Exception {
+        Instant recentSessionStart = Instant.now().minusSeconds(2 * 24 * 60 * 60L);
+        Instant recentSessionEnd = recentSessionStart.plusSeconds(30 * 60L);
+        Instant interruptedSessionStart = Instant.now().minusSeconds(24 * 60 * 60L);
+        Instant interruptedSessionEnd = interruptedSessionStart.plusSeconds(15 * 60L);
+
         User user = userRepository.save(User.builder()
                 .email("analytics@example.com")
                 .passwordHash("hashed-password")
@@ -98,8 +103,8 @@ class AnalyticsControllerIntegrationTest {
                 .user(user)
                 .task(completedTask)
                 .treeType(TreeType.OAK)
-                .startedAt(Instant.parse("2026-06-01T10:00:00Z"))
-                .endedAt(Instant.parse("2026-06-01T10:30:00Z"))
+                .startedAt(recentSessionStart)
+                .endedAt(recentSessionEnd)
                 .duration(30)
                 .completed(true)
                 .interrupted(false)
@@ -108,8 +113,8 @@ class AnalyticsControllerIntegrationTest {
         FocusSession interruptedSession = focusSessionRepository.save(FocusSession.builder()
                 .user(user)
                 .treeType(TreeType.PINE)
-                .startedAt(Instant.parse("2026-06-01T11:00:00Z"))
-                .endedAt(Instant.parse("2026-06-01T11:15:00Z"))
+                .startedAt(interruptedSessionStart)
+                .endedAt(interruptedSessionEnd)
                 .duration(15)
                 .completed(false)
                 .interrupted(true)
