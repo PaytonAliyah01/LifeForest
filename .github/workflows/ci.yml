@@ -170,9 +170,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
-            echo "SonarQube secrets are not configured. Skipping analysis."
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_ORGANIZATION" ]; then
+            echo "SonarCloud secrets are not fully configured. Skipping analysis."
             exit 0
           fi
 
@@ -191,4 +192,5 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.qualitygate.wait=true
