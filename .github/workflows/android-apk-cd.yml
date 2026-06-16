@@ -1,0 +1,61 @@
+name: Android APK CD
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: android-apk-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Check Expo token
+        id: expo-check
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "EXPO_TOKEN is not configured. Skipping Android APK build."
+            exit 0
+          fi
+
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        if: steps.expo-check.outputs.configured == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        if: steps.expo-check.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Trigger Android APK build on EAS
+        if: steps.expo-check.outputs.configured == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli build --platform android --profile production --non-interactive --wait --json > eas-build-details.json
+
+      - name: Upload EAS build details
+        if: steps.expo-check.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-android-build-details
+          path: frontend/eas-build-details.json

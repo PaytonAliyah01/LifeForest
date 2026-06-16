@@ -14,3 +14,9 @@ spring:
 jwt:
   secret: ${JWT_SECRET:lifeforest-dev-jwt-secret-key-32chars}
   expiration-ms: 3600000
+
+app:
+  download-page:
+    title: ${DOWNLOAD_PAGE_TITLE:LifeForest}
+    description: ${DOWNLOAD_PAGE_DESCRIPTION:Download the latest Android APK for LifeForest.}
+    apk-url: ${APK_DOWNLOAD_URL:}

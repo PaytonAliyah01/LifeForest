@@ -673,6 +673,7 @@ export default function FocusSessionScreen() {
                       {availableRoutineTasks.map((task) => (
                         <Pressable
                           key={task.id}
+                          testID={`focus-task-option-${task.id}`}
                           style={({ pressed }) => [
                             styles.optionCard,
                             selectedTaskId === task.id && styles.optionCardSelected,
@@ -801,6 +802,7 @@ export default function FocusSessionScreen() {
                 {!session.completed && !session.interrupted ? (
                   <>
                     <Pressable
+                      testID="focus-stop-timer-button"
                       style={({ pressed }) => [
                         styles.stopButton,
                         styles.fullActionButton,
@@ -816,6 +818,7 @@ export default function FocusSessionScreen() {
                     </Pressable>
 
                     <Pressable
+                      testID="focus-reset-timer-button"
                       style={({ pressed }) => [
                         styles.secondaryButton,
                         styles.fullActionButton,
@@ -831,6 +834,7 @@ export default function FocusSessionScreen() {
                     </Pressable>
 
                     <Pressable
+                      testID="focus-end-session-button"
                       style={({ pressed }) => [
                         styles.endButton,
                         styles.fullActionButton,
@@ -852,6 +856,7 @@ export default function FocusSessionScreen() {
                 ) : null}
 
                 <Pressable
+                  testID="focus-back-to-task-button"
                   style={({ pressed }) => [
                     styles.primaryButton,
                     styles.fullActionButton,
@@ -865,6 +870,7 @@ export default function FocusSessionScreen() {
                 </Pressable>
 
                 <Pressable
+                  testID="focus-reflection-button"
                   style={({ pressed }) => [
                     styles.secondaryButton,
                     styles.fullActionButton,
@@ -900,6 +906,7 @@ export default function FocusSessionScreen() {
               ) : null}
 
               <Pressable
+                testID="focus-cancel-button"
                 style={({ pressed }) => [
                   styles.secondaryButton,
                   pressed && styles.buttonPressed,
@@ -914,6 +921,7 @@ export default function FocusSessionScreen() {
               </Pressable>
 
               <Pressable
+                testID="focus-start-session-button"
                 style={({ pressed }) => [
                   styles.primaryButton,
                   pressed && styles.buttonPressed,

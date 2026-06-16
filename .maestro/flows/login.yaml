@@ -1,0 +1,10 @@
+appId: com.paytonaliyah01.lifeforest
+---
+- launchApp:
+    clearState: true
+- tapOn: "Email"
+- inputText: ${LOGIN_EMAIL}
+- tapOn: "Password"
+- inputText: ${LOGIN_PASSWORD}
+- tapOn: "Log in"
+- assertVisible: "Today's Habits"

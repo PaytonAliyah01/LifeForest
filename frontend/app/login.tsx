@@ -120,6 +120,7 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <TextInput
+              testID="login-email-input"
               style={styles.input}
               placeholder="Email"
               placeholderTextColor="#7A7A7A"
@@ -135,6 +136,7 @@ export default function LoginScreen() {
 
             <TextInput
               ref={passwordInputRef}
+              testID="login-password-input"
               style={styles.input}
               placeholder="Password"
               placeholderTextColor="#7A7A7A"
@@ -146,6 +148,7 @@ export default function LoginScreen() {
             />
 
             <Pressable
+              testID="login-submit-button"
               style={({ pressed }) => [
                 styles.button,
                 pressed && styles.buttonPressed,

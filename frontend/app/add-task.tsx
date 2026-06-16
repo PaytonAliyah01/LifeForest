@@ -173,6 +173,7 @@ export default function AddTaskScreen() {
 
           <View style={styles.form}>
             <TextInput
+              testID="add-task-title-input"
               style={styles.input}
               placeholder="Task title"
               placeholderTextColor="#7A7A7A"
@@ -185,6 +186,7 @@ export default function AddTaskScreen() {
 
             <TextInput
               ref={descriptionInputRef}
+              testID="add-task-description-input"
               style={[styles.input, styles.textArea]}
               placeholder="Description (optional)"
               placeholderTextColor="#7A7A7A"
@@ -200,6 +202,7 @@ export default function AddTaskScreen() {
 
             <TextInput
               ref={durationInputRef}
+              testID="add-task-duration-input"
               style={styles.input}
               placeholder="Duration in minutes (optional)"
               placeholderTextColor="#7A7A7A"
@@ -338,6 +341,7 @@ export default function AddTaskScreen() {
               </Pressable>
 
               <Pressable
+                testID="add-task-submit-button"
                 style={({ pressed }) => [
                   styles.primaryButton,
                   pressed && styles.buttonPressed,

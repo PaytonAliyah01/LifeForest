@@ -268,6 +268,7 @@ export default function ReflectionScreen() {
 
               <TextInput
                 ref={notesInputRef}
+                testID="reflection-notes-input"
                 style={[styles.input, styles.textArea, savedReflection && styles.inputDisabled]}
                 placeholder={
                   outcome === 'interrupted'
@@ -286,6 +287,7 @@ export default function ReflectionScreen() {
               />
 
               <TextInput
+                testID="reflection-distractions-input"
                 style={[styles.input, styles.distractionsInput, savedReflection && styles.inputDisabled]}
                 placeholder="What distracted you?"
                 placeholderTextColor="#7A7A7A"
@@ -318,6 +320,7 @@ export default function ReflectionScreen() {
 
               <View style={styles.actions}>
                 <Pressable
+                  testID="reflection-back-button"
                   style={({ pressed }) => [
                     styles.secondaryButton,
                     pressed && styles.buttonPressed,
@@ -333,6 +336,7 @@ export default function ReflectionScreen() {
 
                 {!savedReflection ? (
                   <Pressable
+                    testID="reflection-save-button"
                     style={({ pressed }) => [
                       styles.primaryButton,
                       pressed && styles.buttonPressed,

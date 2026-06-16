@@ -13,8 +13,8 @@ services:
       - db-data:/var/lib/postgresql/data
 
   backend:
-    build:
-      context: ./backend
+    image: ${BACKEND_IMAGE:-tiffanyphelipa/lifeforest-backend:latest}
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       - db
@@ -23,6 +23,9 @@ services:
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-lifeforest123}
       JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      DOWNLOAD_PAGE_TITLE: ${DOWNLOAD_PAGE_TITLE:-LifeForest}
+      DOWNLOAD_PAGE_DESCRIPTION: ${DOWNLOAD_PAGE_DESCRIPTION:-Download the latest Android APK for LifeForest.}
+      APK_DOWNLOAD_URL: ${APK_DOWNLOAD_URL:-}
     ports:
       - "8080:8080"
 

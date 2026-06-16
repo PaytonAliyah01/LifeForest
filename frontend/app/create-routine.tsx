@@ -129,6 +129,7 @@ export default function CreateRoutineScreen() {
             )}
 
             <TextInput
+              testID="create-routine-title-input"
               style={styles.input}
               placeholder="Title"
               placeholderTextColor="#7A7A7A"
@@ -141,6 +142,7 @@ export default function CreateRoutineScreen() {
 
             <TextInput
               ref={descriptionInputRef}
+              testID="create-routine-description-input"
               style={[styles.input, styles.textArea]}
               placeholder="Description (optional)"
               placeholderTextColor="#7A7A7A"
@@ -154,6 +156,7 @@ export default function CreateRoutineScreen() {
             />
 
             <Pressable
+              testID="create-routine-submit-button"
               style={({ pressed }) => [
                 styles.button,
                 pressed && styles.buttonPressed,

@@ -1,0 +1,34 @@
+appId: com.paytonaliyah01.lifeforest
+name: Interrupted session opens reflection
+tags:
+  - smoke
+---
+- runFlow: flows/login.yaml
+- tapOn: "Routines"
+- tapOn: "Create Habit System"
+- tapOn: "Title"
+- inputText: ${ROUTINE_TITLE}
+- tapOn: "Description (optional)"
+- inputText: ${ROUTINE_DESCRIPTION}
+- tapOn: "Create Routine"
+- assertVisible: ${ROUTINE_TITLE}
+- tapOn: ${ROUTINE_TITLE}
+- tapOn: "Add Habit or Task"
+- tapOn: "Task title"
+- inputText: ${TASK_TITLE}
+- tapOn: "Description (optional)"
+- inputText: ${TASK_DESCRIPTION}
+- tapOn: "Duration in minutes (optional)"
+- inputText: "5"
+- tapOn: "Create Task"
+- assertVisible: ${TASK_TITLE}
+- tapOn: "Start Session"
+- assertVisible: "Session started"
+- tapOn: "End Session Early"
+- assertVisible: "Reflection"
+- tapOn: "What interrupted you, and what would help next time?"
+- inputText: ${REFLECTION_TEXT}
+- tapOn: "What distracted you?"
+- inputText: ${DISTRACTION_TEXT}
+- tapOn: "Save Reflection"
+- assertVisible: "Reflection saved"
