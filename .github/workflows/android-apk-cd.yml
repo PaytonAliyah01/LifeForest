@@ -53,6 +53,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: npx eas-cli build --platform android --profile production --non-interactive --wait --json > eas-build-details.json
 
+      - name: Print EAS build details
+        if: steps.expo-check.outputs.configured == 'true'
+        run: |
+          echo "EAS build details JSON:"
+          cat eas-build-details.json
+
       - name: Upload EAS build details
         if: steps.expo-check.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
