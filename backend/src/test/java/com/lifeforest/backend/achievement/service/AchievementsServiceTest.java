@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.lifeforest.backend.achievement.dto.response.AchievementsResponseDto;
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
 import com.lifeforest.backend.reflection.domain.Reflection;
@@ -44,6 +45,9 @@ class AchievementsServiceTest {
     @Mock
     private TreeRepository treeRepository;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private AchievementsService achievementsService;
 
     @BeforeEach
@@ -53,7 +57,8 @@ class AchievementsServiceTest {
                 routineRepository,
                 focusSessionRepository,
                 reflectionRepository,
-                treeRepository
+                treeRepository,
+                authenticatedUserService
         );
     }
 

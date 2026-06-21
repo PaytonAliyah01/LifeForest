@@ -9,6 +9,7 @@ import { completeHabitToday, getTodayHabitsByUser, uncompleteHabitToday, type To
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { getAnalyticsByUser, type Analytics } from '@/services/analyticsApi';
 import { getUserIdFromToken } from '@/services/authStorage';
 import { getRoutinesByUser, type Routine } from '@/services/routinesApi';
@@ -393,7 +394,7 @@ export default function HomeScreen() {
             disabled={habitActionTaskId === habit.taskId}
           >
             {habitActionTaskId === habit.taskId ? (
-              <ActivityIndicator size="small" color="#F3FBF6" />
+              <ActivityIndicator size="small" color={appColors.secondaryText} />
             ) : (
               <ThemedText type="defaultSemiBold" style={styles.habitCheckoffButtonText}>
                 {habit.completedToday ? 'Completed Today' : 'Check Off Habit'}
@@ -627,7 +628,7 @@ export default function HomeScreen() {
 
           {routinesLoading ? (
             <ThemedView style={styles.feedbackCard}>
-              <ActivityIndicator size="small" color="#7EE081" />
+              <ActivityIndicator size="small" color={appColors.primary} />
               <ThemedText style={styles.feedbackText}>Loading your habits...</ThemedText>
             </ThemedView>
           ) : null}
@@ -747,9 +748,9 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 28,
     padding: 24,
-    backgroundColor: '#13241D',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 18,
   },
   heroTopRow: {
@@ -770,10 +771,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   heroTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
     flexShrink: 1,
   },
@@ -783,20 +784,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#1F3C30',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#3D6B56',
+    borderColor: appColors.secondaryBorder,
     alignItems: 'center',
     gap: 4,
   },
   heroBadgeLabel: {
-    color: '#98B7A7',
+    color: appColors.subtleText,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   heroBadgeValue: {
-    color: '#7EE081',
+    color: appColors.primary,
     fontSize: 28,
     fontWeight: '700',
   },
@@ -813,17 +814,17 @@ const styles = StyleSheet.create({
     minWidth: 0,
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#182D24',
+    backgroundColor: appColors.cardAlt,
     borderWidth: 1,
-    borderColor: '#2A4A3D',
+    borderColor: appColors.panelBorder,
     gap: 4,
   },
   heroStatValue: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 28,
   },
   heroStatLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   actionRow: {
     flexDirection: 'row',
@@ -840,9 +841,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7EE081',
+    backgroundColor: appColors.primary,
     borderWidth: 1,
-    borderColor: '#A5F0AF',
+    borderColor: appColors.primaryBorder,
   },
   actionButtonPressed: {
     opacity: 0.92,
@@ -852,7 +853,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   primaryActionButtonText: {
-    color: '#102218',
+    color: appColors.primaryText,
     fontSize: 15,
   },
   secondaryActionButton: {
@@ -862,12 +863,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1D3A2E',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#4FAF7A',
+    borderColor: appColors.secondaryBorder,
   },
   secondaryActionButtonText: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
     fontSize: 15,
   },
   ghostActionButton: {
@@ -877,16 +878,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#162B22',
+    backgroundColor: appColors.ghost,
     borderWidth: 1,
-    borderColor: '#547568',
+    borderColor: appColors.ghostBorder,
   },
   ghostActionButtonText: {
-    color: '#F0F8F3',
+    color: appColors.ghostText,
     fontSize: 15,
   },
   actionHelperText: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     lineHeight: 21,
     flexShrink: 1,
   },
@@ -902,36 +903,36 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     padding: 18,
-    backgroundColor: '#152821',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 10,
   },
   statusValue: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 28,
     fontWeight: '700',
   },
   sectionTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
     flexShrink: 1,
   },
   sectionSubtitle: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     lineHeight: 20,
     flexShrink: 1,
   },
   statusMessage: {
-    color: '#C9DED2',
+    color: appColors.mutedText,
     lineHeight: 21,
     flexShrink: 1,
   },
   sectionCard: {
     borderRadius: 22,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 14,
   },
   sectionHeaderCopy: {
@@ -942,21 +943,21 @@ const styles = StyleSheet.create({
   feedbackCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#182D24',
+    backgroundColor: appColors.cardAlt,
     borderWidth: 1,
-    borderColor: '#2A4A3D',
+    borderColor: appColors.panelBorder,
     gap: 10,
     alignItems: 'center',
   },
   feedbackText: {
-    color: '#A7C8B7',
+    color: appColors.softText,
     textAlign: 'center',
   },
   emptyTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
   },
   errorText: {
-    color: '#FF9B9B',
+    color: appColors.error,
   },
   habitList: {
     gap: 12,
@@ -965,9 +966,9 @@ const styles = StyleSheet.create({
   habitCard: {
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#1A2E25',
+    backgroundColor: appColors.panel,
     borderWidth: 1,
-    borderColor: '#2F5244',
+    borderColor: appColors.panelBorder,
     gap: 10,
   },
   habitCardPressed: {
@@ -987,11 +988,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   habitTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 18,
   },
   habitRoutineLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   habitTypeBadge: {
     borderRadius: 999,
@@ -1000,24 +1001,24 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   habitTypeBadgeHabit: {
-    backgroundColor: '#183524',
-    borderColor: '#4FAF7A',
+    backgroundColor: appColors.greenPanel,
+    borderColor: appColors.secondaryBorder,
   },
   habitTypeBadgeTask: {
-    backgroundColor: '#2A2E3C',
-    borderColor: '#88B8FF',
+    backgroundColor: appColors.bluePanel,
+    borderColor: appColors.blueBorder,
   },
   habitTypeBadgeText: {
     fontSize: 12,
   },
   habitTypeBadgeTextHabit: {
-    color: '#8DE2A8',
+    color: appColors.greenText,
   },
   habitTypeBadgeTextTask: {
-    color: '#B4D4FF',
+    color: appColors.blueText,
   },
   habitDescription: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 20,
   },
   habitMetaRow: {
@@ -1031,10 +1032,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#244338',
+    backgroundColor: appColors.cardBorder,
   },
   metaChipText: {
-    color: '#BFE7D2',
+    color: appColors.mutedText,
     fontSize: 12,
   },
   habitStatsRow: {
@@ -1047,18 +1048,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#20362C',
+    backgroundColor: appColors.panelStrong,
     borderWidth: 1,
-    borderColor: '#325346',
+    borderColor: appColors.panelBorder,
     gap: 2,
   },
   habitStatValue: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 20,
     fontWeight: '700',
   },
   habitStatLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     fontSize: 12,
   },
   historyRow: {
@@ -1072,10 +1073,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   historyDotDone: {
-    backgroundColor: '#7EE081',
+    backgroundColor: appColors.primary,
   },
   historyDotOpen: {
-    backgroundColor: '#314A40',
+    backgroundColor: appColors.panelBorder,
   },
   habitActionRow: {
     flexDirection: 'row',
@@ -1094,15 +1095,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   habitCheckoffOpen: {
-    backgroundColor: '#2B5642',
-    borderColor: '#7CCF96',
+    backgroundColor: appColors.secondary,
+    borderColor: appColors.secondaryBorder,
   },
   habitCheckoffDone: {
-    backgroundColor: '#3E6C4C',
-    borderColor: '#A5F0AF',
+    backgroundColor: appColors.selectedPanel,
+    borderColor: appColors.primaryBorder,
   },
   habitCheckoffButtonText: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
     fontSize: 14,
   },
   habitActionButtonPressed: {
@@ -1117,14 +1118,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#20362C',
+    backgroundColor: appColors.panelStrong,
     borderWidth: 1,
-    borderColor: '#547568',
+    borderColor: appColors.ghostBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   habitSecondaryButtonText: {
-    color: '#E2EEE8',
+    color: appColors.text,
     fontSize: 14,
   },
   systemList: {
@@ -1134,9 +1135,9 @@ const styles = StyleSheet.create({
   systemCard: {
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#1A2E25',
+    backgroundColor: appColors.panel,
     borderWidth: 1,
-    borderColor: '#2F5244',
+    borderColor: appColors.panelBorder,
   },
   systemCardPressed: {
     opacity: 0.94,
@@ -1155,21 +1156,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   systemTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 18,
   },
   systemDescription: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 20,
   },
   systemCountBadge: {
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#244338',
+    backgroundColor: appColors.cardBorder,
   },
   systemCountText: {
-    color: '#BFE7D2',
+    color: appColors.mutedText,
     fontSize: 12,
   },
 });

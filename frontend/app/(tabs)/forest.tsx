@@ -8,6 +8,7 @@ import { ForestTreeCardVisual } from '@/components/forest-tree-card-visual';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { getUserIdFromToken } from '@/services/authStorage';
 import { type Tree, getTreesByUser } from '@/services/treesApi';
 
@@ -335,7 +336,7 @@ export default function ForestScreen() {
 
         {loading ? (
           <ThemedView style={styles.feedbackCard}>
-            <ActivityIndicator size="small" color="#4CAF50" />
+            <ActivityIndicator size="small" color={appColors.primary} />
             <ThemedText style={styles.feedbackText}>Growing your forest view...</ThemedText>
           </ThemedView>
         ) : null}
@@ -485,16 +486,16 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   heroTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   statsRow: {
     flexDirection: 'row',
@@ -507,47 +508,47 @@ const styles = StyleSheet.create({
     minWidth: 150,
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#163026',
+    backgroundColor: appColors.cardAlt,
     borderWidth: 1,
-    borderColor: '#28493D',
+    borderColor: appColors.panelBorder,
     gap: 6,
   },
   statNumber: {
-    color: '#7EE081',
+    color: appColors.primary,
   },
   statLabel: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     flexShrink: 1,
   },
   feedbackCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 10,
     alignItems: 'center',
   },
   feedbackTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   feedbackText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     textAlign: 'center',
   },
   archiveCard: {
     borderRadius: 22,
     padding: 18,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 14,
   },
   archiveTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   archiveSubtitle: {
-    color: '#A7C8B7',
+    color: appColors.softText,
   },
   yearChips: {
     flexDirection: 'row',
@@ -558,23 +559,23 @@ const styles = StyleSheet.create({
   yearChip: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#355648',
-    backgroundColor: '#172923',
+    borderColor: appColors.inputBorder,
+    backgroundColor: appColors.panelSoft,
     paddingVertical: 9,
     paddingHorizontal: 14,
   },
   yearChipSelected: {
-    backgroundColor: '#234233',
-    borderColor: '#63C174',
+    backgroundColor: appColors.selectedPanel,
+    borderColor: appColors.selectedPanelBorder,
   },
   yearChipPressed: {
     opacity: 0.9,
   },
   yearChipText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   yearChipTextSelected: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
   },
   monthList: {
     gap: 10,
@@ -583,14 +584,14 @@ const styles = StyleSheet.create({
   monthCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2C4B3F',
-    backgroundColor: '#182D24',
+    borderColor: appColors.panelBorder,
+    backgroundColor: appColors.cardAlt,
     padding: 14,
     gap: 6,
   },
   monthCardSelected: {
-    borderColor: '#63C174',
-    backgroundColor: '#1E382C',
+    borderColor: appColors.selectedPanelBorder,
+    backgroundColor: appColors.selectedPanel,
   },
   monthCardPressed: {
     opacity: 0.92,
@@ -603,14 +604,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   monthCardTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
     flex: 1,
   },
   monthCardCount: {
-    color: '#7EE081',
+    color: appColors.primary,
   },
   monthCardMeta: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   daySections: {
     gap: 16,
@@ -628,10 +629,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dayTitle: {
-    color: '#DDEEE4',
+    color: appColors.text,
   },
   dayCount: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   dayGrid: {
     flexDirection: 'row',
@@ -648,16 +649,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   treePlotSelected: {
-    backgroundColor: '#183126',
+    backgroundColor: appColors.greenPanel,
     borderWidth: 1,
-    borderColor: '#4FAF7A',
+    borderColor: appColors.secondaryBorder,
   },
   treePlotPressed: {
     opacity: 0.92,
     transform: [{ scale: 0.985 }],
   },
   treePlotLabel: {
-    color: '#DDEEE4',
+    color: appColors.text,
     textAlign: 'center',
     fontSize: 13,
     lineHeight: 18,
@@ -666,16 +667,16 @@ const styles = StyleSheet.create({
   selectedTreeCard: {
     borderRadius: 20,
     padding: 18,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   selectedTreeTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   selectedTreeSubtitle: {
-    color: '#A7C8B7',
+    color: appColors.softText,
   },
   selectedTreeMetaRow: {
     flexDirection: 'row',
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   selectedTreeMeta: {
-    color: '#7FA08E',
+    color: appColors.subtleText,
     flexShrink: 1,
   },
 });

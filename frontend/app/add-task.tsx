@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,8 +12,11 @@ import {
 import { isAxiosError } from 'axios';
 
 import { api } from '@/services/api';
+import { AppButton } from '@/components/ui/app-button';
+import { AppCard } from '@/components/ui/app-card';
+import { appSharedStyles } from '@/components/ui/app-theme';
+import { AppTextField } from '@/components/ui/app-text-field';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { createTask, type RepeatDay, type TaskCategory, type TaskType } from '@/services/tasksApi';
 
 const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
@@ -151,7 +153,7 @@ export default function AddTaskScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={appSharedStyles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={24}
     >
@@ -161,22 +163,20 @@ export default function AddTaskScreen() {
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
-        <ThemedView style={styles.card}>
-          <ThemedText type="title" style={styles.title}>
+        <AppCard style={styles.card}>
+          <ThemedText type="title" style={appSharedStyles.title}>
             Add Task
           </ThemedText>
-          <ThemedText type="default" style={styles.subtitle}>
+          <ThemedText type="default" style={appSharedStyles.subtitle}>
             {routineTitle
               ? `Create a task for "${routineTitle}".`
               : 'Create a task for this routine.'}
           </ThemedText>
 
-          <View style={styles.form}>
-            <TextInput
+          <View style={appSharedStyles.form}>
+            <AppTextField
               testID="add-task-title-input"
-              style={styles.input}
               placeholder="Task title"
-              placeholderTextColor="#7A7A7A"
               value={title}
               onChangeText={setTitle}
               returnKeyType="next"
@@ -184,15 +184,14 @@ export default function AddTaskScreen() {
               onSubmitEditing={() => descriptionInputRef.current?.focus()}
             />
 
-            <TextInput
+            <AppTextField
               ref={descriptionInputRef}
               testID="add-task-description-input"
-              style={[styles.input, styles.textArea]}
+              style={styles.textArea}
               placeholder="Description (optional)"
-              placeholderTextColor="#7A7A7A"
               multiline
               numberOfLines={4}
-              textAlignVertical="top"
+              multilineHeight={110}
               value={description}
               onChangeText={setDescription}
               returnKeyType="next"
@@ -200,12 +199,10 @@ export default function AddTaskScreen() {
               onSubmitEditing={() => durationInputRef.current?.focus()}
             />
 
-            <TextInput
+            <AppTextField
               ref={durationInputRef}
               testID="add-task-duration-input"
-              style={styles.input}
               placeholder="Duration in minutes (optional)"
-              placeholderTextColor="#7A7A7A"
               keyboardType="number-pad"
               value={duration}
               onChangeText={setDuration}
@@ -283,7 +280,7 @@ export default function AddTaskScreen() {
                   <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
                     Repeat on
                   </ThemedText>
-                  <ThemedText style={styles.helperText}>
+                  <ThemedText style={appSharedStyles.helperText}>
                     Leave all days empty if this habit should be due every day.
                   </ThemedText>
                   <View style={styles.categoryOptions}>
@@ -315,10 +312,8 @@ export default function AddTaskScreen() {
                   </View>
                 </View>
 
-                <TextInput
-                  style={styles.input}
+                <AppTextField
                   placeholder="Preferred time (for example 07:30 or Evening)"
-                  placeholderTextColor="#7A7A7A"
                   value={preferredTime}
                   onChangeText={setPreferredTime}
                 />
@@ -326,93 +321,39 @@ export default function AddTaskScreen() {
             ) : null}
 
             <View style={styles.actions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryButton,
-                  pressed && styles.buttonPressed,
-                  loading && styles.buttonDisabled,
-                ]}
+              <AppButton
+                label="Cancel"
+                variant="secondary"
                 onPress={() => router.back()}
                 disabled={loading}
-              >
-                <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
-                  Cancel
-                </ThemedText>
-              </Pressable>
+                style={styles.actionButton}
+              />
 
-              <Pressable
+              <AppButton
                 testID="add-task-submit-button"
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed && styles.buttonPressed,
-                  (!canCreate || loading) && styles.buttonDisabled,
-                ]}
+                label="Create Task"
                 onPress={() => void handleCreateTask()}
+                loading={loading}
                 disabled={!canCreate || loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>
-                    Create Task
-                  </ThemedText>
-                )}
-              </Pressable>
+                style={styles.actionButton}
+              />
             </View>
 
-            {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
+            {errorMessage ? <ThemedText style={appSharedStyles.errorText}>{errorMessage}</ThemedText> : null}
           </View>
-        </ThemedView>
+        </AppCard>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0F1B16',
-  },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    ...appSharedStyles.scrollContent,
     paddingTop: 24,
     paddingHorizontal: 24,
-    paddingBottom: 72,
   },
-  card: {
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#14251F',
-    borderWidth: 1,
-    borderColor: '#244338',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
-  },
-  title: {
-    color: '#EAF6F0',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#B7CCC2',
-    marginBottom: 20,
-  },
-  form: {
-    gap: 14,
-  },
-  input: {
-    backgroundColor: '#20352D',
-    color: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#355648',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-  },
+  card: {},
   textArea: {
     minHeight: 110,
   },
@@ -472,51 +413,16 @@ const styles = StyleSheet.create({
   typeCardHelperSelected: {
     color: '#CFE7D7',
   },
-  helperText: {
-    color: '#98B7A7',
-  },
   actions: {
     flexDirection: 'row',
     gap: 12,
     marginTop: 6,
   },
-  primaryButton: {
+  actionButton: {
     flex: 1,
-    backgroundColor: '#7EE081',
-    borderWidth: 1,
-    borderColor: '#A5F0AF',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#1D3A2E',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#4FAF7A',
-  },
-  primaryButtonText: {
-    color: '#102218',
-    fontSize: 15,
-  },
-  secondaryButtonText: {
-    color: '#F3FBF6',
-    fontSize: 15,
   },
   buttonPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.99 }],
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  errorText: {
-    color: '#FF8A8A',
-    marginTop: 8,
   },
 });

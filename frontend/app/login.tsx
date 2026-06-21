@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -18,7 +16,10 @@ import { api } from '@/services/api';
 import { login as loginRequest } from '@/services/authApi';
 import { HelloWave } from '@/components/hello-wave';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/app-button';
+import { AppCard } from '@/components/ui/app-card';
+import { appSharedStyles } from '@/components/ui/app-theme';
+import { AppTextField } from '@/components/ui/app-text-field';
 
 export default function LoginScreen() {
   const { width } = useWindowDimensions();
@@ -97,33 +98,31 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={appSharedStyles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={24}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
+        contentContainerStyle={[appSharedStyles.scrollContent, { paddingHorizontal: horizontalPadding }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
-        <ThemedView style={[styles.card, { maxWidth: cardMaxWidth }] }>
+        <AppCard style={{ maxWidth: cardMaxWidth }}>
           <View style={styles.titleRow}>
-            <ThemedText type="title" style={styles.title}>
+            <ThemedText type="title" style={appSharedStyles.title}>
               Log in
             </ThemedText>
             <HelloWave />
           </View>
-          <ThemedText type="default" style={styles.subtitle}>
+          <ThemedText type="default" style={appSharedStyles.subtitle}>
             Log in to your LifeForest account.
           </ThemedText>
 
-          <View style={styles.form}>
-            <TextInput
+          <View style={appSharedStyles.form}>
+            <AppTextField
               testID="login-email-input"
-              style={styles.input}
               placeholder="Email"
-              placeholderTextColor="#7A7A7A"
               keyboardType="email-address"
               returnKeyType="next"
               autoCapitalize="none"
@@ -134,12 +133,10 @@ export default function LoginScreen() {
               onChangeText={setEmail}
             />
 
-            <TextInput
+            <AppTextField
               ref={passwordInputRef}
               testID="login-password-input"
-              style={styles.input}
               placeholder="Password"
-              placeholderTextColor="#7A7A7A"
               secureTextEntry
               returnKeyType="go"
               onSubmitEditing={() => void handleLogin()}
@@ -147,123 +144,36 @@ export default function LoginScreen() {
               onChangeText={setPassword}
             />
 
-            <Pressable
+            <AppButton
               testID="login-submit-button"
-              style={({ pressed }) => [
-                styles.button,
-                pressed && styles.buttonPressed,
-                loading && styles.buttonDisabled,
-              ]}
+              label="Log in"
               onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-                  Log in
-                </ThemedText>
-              )}
-            </Pressable>
+              loading={loading}
+              style={styles.buttonSpacing}
+            />
 
             {successMessage ? (
-              <ThemedText style={styles.successText}>{successMessage}</ThemedText>
+              <ThemedText style={appSharedStyles.successText}>{successMessage}</ThemedText>
             ) : null}
 
             {errorMessage ? (
-              <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+              <ThemedText style={appSharedStyles.errorText}>{errorMessage}</ThemedText>
             ) : null}
           </View>
-        </ThemedView>
+        </AppCard>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0F1B16',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingTop: 24,
-    paddingBottom: 72,
-  },
-  card: {
-    width: '100%',
-    alignSelf: 'center',
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#14251F',
-    borderWidth: 1,
-    borderColor: '#244338',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
-  },
-  title: {
-    color: '#EAF6F0',
-    marginBottom: 8,
-  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 8,
   },
-  subtitle: {
-    color: '#B7CCC2',
-    marginBottom: 20,
-  },
-  form: {
-    gap: 14,
-  },
-  input: {
-    backgroundColor: '#20352D',
-    color: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#355648',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#7EE081',
-    borderWidth: 1,
-    borderColor: '#A5F0AF',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonSpacing: {
     marginTop: 6,
-    shadowColor: '#7EE081',
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#102218',
-    fontSize: 16,
-  },
-  successText: {
-    color: '#7EE081',
-    marginTop: 8,
-  },
-  errorText: {
-    color: '#FF8A8A',
-    marginTop: 8,
   },
 });

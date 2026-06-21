@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
 import com.lifeforest.backend.reflection.domain.Reflection;
@@ -33,6 +34,9 @@ class ReflectionServiceTest {
     @Mock
     private FocusSessionRepository focusSessionRepository;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private ReflectionMapper reflectionMapper;
 
     private ReflectionService reflectionService;
@@ -44,7 +48,8 @@ class ReflectionServiceTest {
                 reflectionRepository,
                 userRepository,
                 focusSessionRepository,
-                reflectionMapper
+                reflectionMapper,
+                authenticatedUserService
         );
     }
 

@@ -1,5 +1,6 @@
 package com.lifeforest.backend.habit.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.habit.dto.response.TodayHabitResponseDto;
 import com.lifeforest.backend.habitcompletion.domain.HabitCompletion;
 import com.lifeforest.backend.habitcompletion.repository.HabitCompletionRepository;
@@ -28,9 +29,11 @@ public class HabitTrackerService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final HabitCompletionRepository habitCompletionRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional(readOnly = true)
     public List<TodayHabitResponseDto> getTodayHabits(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -50,6 +53,7 @@ public class HabitTrackerService {
 
     @Transactional
     public TodayHabitResponseDto completeToday(Long userId, Long taskId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
         Task task = loadRepeatingTaskForUser(taskId, userId);
@@ -67,6 +71,7 @@ public class HabitTrackerService {
 
     @Transactional
     public TodayHabitResponseDto uncompleteToday(Long userId, Long taskId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         Task task = loadRepeatingTaskForUser(taskId, userId);
         LocalDate today = LocalDate.now();
 

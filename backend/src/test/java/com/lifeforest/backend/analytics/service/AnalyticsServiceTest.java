@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.analytics.dto.response.AnalyticsResponseDto;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
@@ -40,6 +41,9 @@ class AnalyticsServiceTest {
     @Mock
     private TreeRepository treeRepository;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private AnalyticsService analyticsService;
 
     @BeforeEach
@@ -48,7 +52,8 @@ class AnalyticsServiceTest {
                 userRepository,
                 focusSessionRepository,
                 reflectionRepository,
-                treeRepository
+                treeRepository,
+                authenticatedUserService
         );
     }
 

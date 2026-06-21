@@ -3,6 +3,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, useWindowDimensio
 import { router, useLocalSearchParams } from 'expo-router';
 import { isAxiosError } from 'axios';
 
+import { AppButton } from '@/components/ui/app-button';
+import { appColors } from '@/components/ui/app-theme';
 import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -207,8 +209,9 @@ export default function RoutineScreen() {
             </ThemedView>
           </View>
 
-          <View style={styles.actionsRow}>
-            <Pressable
+            <View style={styles.actionsRow}>
+            <AppButton
+              label="Add Habit or Task"
               style={styles.primaryButton}
               onPress={() =>
                 router.push({
@@ -219,13 +222,11 @@ export default function RoutineScreen() {
                   },
                 })
               }
-            >
-              <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>
-                Add Habit or Task
-              </ThemedText>
-            </Pressable>
+            />
 
-            <Pressable
+            <AppButton
+              label="Edit Routine"
+              variant="secondary"
               style={styles.secondaryButton}
               onPress={() =>
                 router.push({
@@ -238,11 +239,7 @@ export default function RoutineScreen() {
                   },
                 })
               }
-            >
-              <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
-                Edit Routine
-              </ThemedText>
-            </Pressable>
+            />
           </View>
         </ThemedView>
 
@@ -256,7 +253,7 @@ export default function RoutineScreen() {
 
           {loading ? (
             <ThemedView style={styles.feedbackCard}>
-              <ActivityIndicator size="small" color="#7EE081" />
+              <ActivityIndicator size="small" color={appColors.primary} />
               <ThemedText style={styles.feedbackText}>Loading tasks...</ThemedText>
             </ThemedView>
           ) : errorMessage ? (
@@ -317,11 +314,10 @@ export default function RoutineScreen() {
                   </View>
 
                   {isTaskAvailableForFocus(task) ? (
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.focusButton,
-                        pressed && styles.taskActionPressed,
-                      ]}
+                    <AppButton
+                      label="Start Session"
+                      variant="secondary"
+                      style={styles.focusButton}
                       onPress={(event) => {
                         event.stopPropagation();
                         router.push({
@@ -333,11 +329,7 @@ export default function RoutineScreen() {
                           },
                         } as never);
                       }}
-                    >
-                      <ThemedText type="defaultSemiBold" style={styles.focusButtonText}>
-                        Start Session
-                      </ThemedText>
-                    </Pressable>
+                    />
                   ) : null}
                 </Pressable>
               ))}
@@ -360,7 +352,7 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#13241D',
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 18,
   },
   heroTopRow: {
@@ -380,7 +372,7 @@ const styles = StyleSheet.create({
     color: '#F1F7EE',
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
   },
   stateBadge: {
@@ -391,8 +383,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   stateActive: {
-    backgroundColor: '#183524',
-    borderColor: '#4FAF7A',
+    backgroundColor: appColors.greenPanel,
+    borderColor: appColors.secondaryBorder,
   },
   stateDone: {
     backgroundColor: '#233140',
@@ -402,7 +394,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   stateActiveText: {
-    color: '#8DE2A8',
+    color: appColors.greenText,
   },
   stateDoneText: {
     color: '#B4D4FF',
@@ -420,7 +412,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#182D24',
     borderWidth: 1,
-    borderColor: '#2A4A3D',
+    borderColor: appColors.panelBorder,
     gap: 4,
   },
   statValue: {
@@ -428,7 +420,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   statLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -439,48 +431,26 @@ const styles = StyleSheet.create({
   primaryButton: {
     flex: 1,
     minWidth: 150,
-    borderRadius: 16,
-    paddingVertical: 14,
     paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#7EE081',
-    borderWidth: 1,
-    borderColor: '#A5F0AF',
   },
   secondaryButton: {
     flex: 1,
     minWidth: 150,
-    borderRadius: 16,
-    paddingVertical: 14,
     paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1D3A2E',
-    borderWidth: 1,
-    borderColor: '#4FAF7A',
-  },
-  primaryButtonText: {
-    color: '#102218',
-    fontSize: 15,
-  },
-  secondaryButtonText: {
-    color: '#F3FBF6',
-    fontSize: 15,
   },
   sectionCard: {
     borderRadius: 24,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 12,
   },
   sectionTitle: {
     color: '#F1F7EE',
   },
   sectionSubtitle: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     lineHeight: 20,
   },
   feedbackCard: {
@@ -488,7 +458,7 @@ const styles = StyleSheet.create({
     padding: 18,
     backgroundColor: '#162821',
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 10,
     alignItems: 'center',
   },
@@ -534,7 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#244338',
+    backgroundColor: appColors.cardBorder,
     maxWidth: '100%',
   },
   taskBadgeText: {
@@ -554,24 +524,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   taskMetaText: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     flexShrink: 1,
   },
   focusButton: {
     marginTop: 2,
     alignSelf: 'flex-start',
-    borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 8,
     backgroundColor: '#2B5642',
-    borderWidth: 1,
     borderColor: '#7CCF96',
-  },
-  taskActionPressed: {
-    opacity: 0.9,
-  },
-  focusButtonText: {
-    color: '#F3FBF6',
-    fontSize: 14,
+    borderRadius: 999,
+    paddingVertical: 8,
   },
 });

@@ -1,5 +1,6 @@
 package com.lifeforest.backend.task.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.routine.exception.RoutineNotFoundException;
 import com.lifeforest.backend.routine.repository.RoutineRepository;
@@ -23,10 +24,12 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final RoutineRepository routineRepository;
     private final TaskMapper taskMapper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public TaskResponseDto create(Long routineId, TaskCreateRequestDto dto) {
         Routine routine = loadRoutine(routineId);
+        authenticatedUserService.assertCanAccessRoutine(routine);
         Task task = taskMapper.toEntity(routine, dto);
         routine.addTask(task);
         Task savedTask = taskRepository.save(Objects.requireNonNull(task, "task"));
@@ -35,7 +38,8 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<TaskResponseDto> getAllByRoutine(Long routineId) {
-        loadRoutine(routineId);
+        Routine routine = loadRoutine(routineId);
+        authenticatedUserService.assertCanAccessRoutine(routine);
         return taskRepository.findAllByRoutineId(routineId).stream()
                 .map(taskMapper::toResponseDto)
                 .toList();
@@ -74,6 +78,8 @@ public class TaskService {
         if (!task.getRoutine().getId().equals(routineId)) {
             throw new TaskNotFoundException(taskId);
         }
+
+        authenticatedUserService.assertCanAccessTask(task);
 
         return task;
     }

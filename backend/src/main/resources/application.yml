@@ -12,11 +12,17 @@ spring:
     show-sql: true
 
 jwt:
-  secret: ${JWT_SECRET:lifeforest-dev-jwt-secret-key-32chars}
+  secret: ${JWT_SECRET:}
   expiration-ms: 3600000
 
 app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:8081,http://127.0.0.1:8081,http://localhost:19006,http://127.0.0.1:19006}
   download-page:
     title: ${DOWNLOAD_PAGE_TITLE:LifeForest}
-    description: ${DOWNLOAD_PAGE_DESCRIPTION:Download the latest Android APK for LifeForest.}
+    description: ${DOWNLOAD_PAGE_DESCRIPTION:Build routines, stay focused, reflect with intention, and turn steady progress into visible growth.}
     apk-url: ${APK_DOWNLOAD_URL:}
+    contact-email: ${DOWNLOAD_PAGE_CONTACT_EMAIL:hello@lifeforest.app}
+    developer-name: ${DOWNLOAD_PAGE_DEVELOPER_NAME:LifeForest Developer}
+    developer-bio: ${DOWNLOAD_PAGE_DEVELOPER_BIO:Elienne Phelipa is the developer behind LifeForest. The app grew out of reflection on previous semester projects, where lessons about scope management, sustained focus, feedback, and communication showed how much progress depends on structure and consistency. LifeForest brings those lessons into one mobile experience through routines, focus sessions, reflection, analytics, and visual forest growth.}
+    inspiration: ${DOWNLOAD_PAGE_INSPIRATION:LifeForest was inspired by the need for a productivity app that supports sustainable growth instead of short-term pressure. Drawing from previous project experience and research into habits, focus, gamification, and reflection, the app combines routine building, timed focus sessions, structured reflection, and visible tree growth so students and young professionals can see their consistency take shape over time.}

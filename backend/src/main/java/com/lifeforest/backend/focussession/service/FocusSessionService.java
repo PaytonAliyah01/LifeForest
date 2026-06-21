@@ -1,5 +1,6 @@
 package com.lifeforest.backend.focussession.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.exception.FocusSessionInterruptedException;
 import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
@@ -30,6 +31,7 @@ public class FocusSessionService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final TreeService treeService;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public FocusSession create(FocusSession focusSession) {
@@ -39,6 +41,7 @@ public class FocusSessionService {
 
     @Transactional
     public FocusSession start(Long userId, Long taskId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = loadUser(userId);
         Task task = taskId == null ? null : loadTask(taskId);
 
@@ -60,6 +63,7 @@ public class FocusSessionService {
     @Transactional
     public FocusSession complete(Long focusSessionId) {
         FocusSession focusSession = loadFocusSession(focusSessionId);
+        authenticatedUserService.assertCanAccessFocusSession(focusSession);
 
         if (focusSession.isCompleted()) {
             treeService.createForCompletedSession(focusSession);
@@ -84,6 +88,7 @@ public class FocusSessionService {
     @Transactional
     public FocusSession interrupt(Long focusSessionId) {
         FocusSession focusSession = loadFocusSession(focusSessionId);
+        authenticatedUserService.assertCanAccessFocusSession(focusSession);
 
         if (focusSession.isCompleted()) {
             return focusSession;
@@ -107,24 +112,28 @@ public class FocusSessionService {
 
     @Transactional(readOnly = true)
     public List<FocusSession> getAll() {
-        return focusSessionRepository.findAll();
+        return getAllByUser(authenticatedUserService.getCurrentUser().getId());
     }
 
     @Transactional(readOnly = true)
     public List<FocusSession> getAllByUser(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         loadUser(userId);
         return focusSessionRepository.findAllByUserId(userId);
     }
 
     @Transactional(readOnly = true)
     public List<FocusSession> getAllByTask(Long taskId) {
-        loadTask(taskId);
+        Task task = loadTask(taskId);
+        authenticatedUserService.assertCanAccessTask(task);
         return focusSessionRepository.findAllByTaskId(taskId);
     }
 
     @Transactional(readOnly = true)
     public FocusSession getById(Long focusSessionId) {
-        return loadFocusSession(focusSessionId);
+        FocusSession focusSession = loadFocusSession(focusSessionId);
+        authenticatedUserService.assertCanAccessFocusSession(focusSession);
+        return focusSession;
     }
 
     @Transactional
@@ -150,6 +159,7 @@ public class FocusSessionService {
     @Transactional
     public void delete(Long focusSessionId) {
         FocusSession focusSession = loadFocusSession(focusSessionId);
+        authenticatedUserService.assertCanAccessFocusSession(focusSession);
         focusSessionRepository.delete(Objects.requireNonNull(focusSession, FOCUS_SESSION));
     }
 

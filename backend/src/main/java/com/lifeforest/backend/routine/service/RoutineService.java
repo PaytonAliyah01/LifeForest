@@ -1,5 +1,6 @@
 package com.lifeforest.backend.routine.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.routine.dto.request.RoutineCreateRequestDto;
 import com.lifeforest.backend.routine.dto.request.RoutineUpdateRequestDto;
@@ -27,9 +28,11 @@ public class RoutineService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final RoutineMapper routineMapper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public RoutineResponseDto create(Long userId, RoutineCreateRequestDto dto) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = userRepository.findById(Objects.requireNonNull(userId, "userId"))
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -40,6 +43,7 @@ public class RoutineService {
 
     @Transactional(readOnly = true)
     public List<RoutineResponseDto> getAllByUser(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         return routineRepository.findAllByUserId(userId).stream()
                 .map(routineMapper::toResponseDto)
                 .toList();
@@ -63,6 +67,7 @@ public class RoutineService {
     public RoutineResponseDto updateById(Long routineId, RoutineUpdateRequestDto dto) {
         Routine routine = routineRepository.findById(Objects.requireNonNull(routineId, "routineId"))
                 .orElseThrow(() -> new RoutineNotFoundException(routineId));
+        authenticatedUserService.assertCanAccessRoutine(routine);
 
         routineMapper.applyUpdate(routine, dto);
         Routine updatedRoutine = routineRepository.save(Objects.requireNonNull(routine, ROUTINE));
@@ -80,6 +85,7 @@ public class RoutineService {
     public void deleteById(Long routineId) {
         Routine routine = routineRepository.findById(Objects.requireNonNull(routineId, "routineId"))
                 .orElseThrow(() -> new RoutineNotFoundException(routineId));
+        authenticatedUserService.assertCanAccessRoutine(routine);
 
         taskRepository.deleteAllByRoutineId(routine.getId());
         routineRepository.delete(Objects.requireNonNull(routine, ROUTINE));
@@ -92,6 +98,8 @@ public class RoutineService {
         if (!routine.getUser().getId().equals(userId)) {
             throw new RoutineNotFoundException(routineId);
         }
+
+        authenticatedUserService.assertCanAccessRoutine(routine);
 
         return routine;
     }

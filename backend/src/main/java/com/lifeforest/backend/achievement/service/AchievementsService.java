@@ -1,5 +1,6 @@
 package com.lifeforest.backend.achievement.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.achievement.dto.response.AchievementProgressDto;
 import com.lifeforest.backend.achievement.dto.response.AchievementsResponseDto;
 import com.lifeforest.backend.focussession.domain.FocusSession;
@@ -26,9 +27,11 @@ public class AchievementsService {
     private final FocusSessionRepository focusSessionRepository;
     private final ReflectionRepository reflectionRepository;
     private final TreeRepository treeRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional(readOnly = true)
     public AchievementsResponseDto getAchievements(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 

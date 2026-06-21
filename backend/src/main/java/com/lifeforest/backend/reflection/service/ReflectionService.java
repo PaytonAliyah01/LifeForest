@@ -1,5 +1,6 @@
 package com.lifeforest.backend.reflection.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
@@ -27,6 +28,7 @@ public class ReflectionService {
     private final UserRepository userRepository;
     private final FocusSessionRepository focusSessionRepository;
     private final ReflectionMapper reflectionMapper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public Reflection create(Reflection reflection) {
@@ -36,6 +38,7 @@ public class ReflectionService {
 
     @Transactional
     public Reflection create(Long userId, ReflectionCreateRequestDto dto) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = loadUser(Objects.requireNonNull(userId, "userId"));
         FocusSession focusSession = loadFocusSession(dto.focusSessionId());
         validateFocusSessionOwnership(user, focusSession);
@@ -46,25 +49,30 @@ public class ReflectionService {
 
     @Transactional(readOnly = true)
     public List<Reflection> getAll() {
-        return reflectionRepository.findAll();
+        return getAllByUser(authenticatedUserService.getCurrentUser().getId());
     }
 
     @Transactional(readOnly = true)
     public List<Reflection> getAllByUser(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         loadUser(userId);
         return reflectionRepository.findAllByUserId(userId);
     }
 
     @Transactional(readOnly = true)
     public Reflection getById(Long reflectionId) {
-        return loadReflection(reflectionId);
+        Reflection reflection = loadReflection(reflectionId);
+        authenticatedUserService.assertCanAccessReflection(reflection);
+        return reflection;
     }
 
     @Transactional(readOnly = true)
     public Reflection getByFocusSession(Long focusSessionId) {
         loadFocusSession(focusSessionId);
-        return reflectionRepository.findByFocusSessionId(focusSessionId)
+        Reflection reflection = reflectionRepository.findByFocusSessionId(focusSessionId)
                 .orElseThrow(() -> new ReflectionNotFoundException(focusSessionId));
+        authenticatedUserService.assertCanAccessReflection(reflection);
+        return reflection;
     }
 
     @Transactional
@@ -87,6 +95,7 @@ public class ReflectionService {
     @Transactional
     public void delete(Long reflectionId) {
         Reflection reflection = loadReflection(reflectionId);
+        authenticatedUserService.assertCanAccessReflection(reflection);
         reflectionRepository.delete(Objects.requireNonNull(reflection, REFLECTION));
     }
 

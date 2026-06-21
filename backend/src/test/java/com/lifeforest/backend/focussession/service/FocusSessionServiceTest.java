@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.exception.FocusSessionInterruptedException;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
@@ -46,6 +47,9 @@ class FocusSessionServiceTest {
     @Mock
     private TreeService treeService;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private FocusSessionService focusSessionService;
 
     @BeforeEach
@@ -54,7 +58,8 @@ class FocusSessionServiceTest {
                 focusSessionRepository,
                 userRepository,
                 taskRepository,
-                treeService
+                treeService,
+                authenticatedUserService
         );
     }
 

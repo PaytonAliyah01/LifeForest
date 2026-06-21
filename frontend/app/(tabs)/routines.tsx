@@ -8,6 +8,7 @@ import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { getUserIdFromToken } from '@/services/authStorage';
 import { getRoutinesByUser, type Routine } from '@/services/routinesApi';
 import { getTasksByRoutine, type Task } from '@/services/tasksApi';
@@ -229,7 +230,7 @@ export default function RoutinesScreen() {
 
         {loading ? (
           <ThemedView style={styles.feedbackCard}>
-            <ActivityIndicator size="small" color="#7EE081" />
+            <ActivityIndicator size="small" color={appColors.primary} />
             <ThemedText style={styles.feedbackText}>Loading your routines...</ThemedText>
           </ThemedView>
         ) : errorMessage ? (
@@ -418,16 +419,16 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 28,
     padding: 24,
-    backgroundColor: '#13241D',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 18,
   },
   heroTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
   },
   statsRow: {
@@ -441,17 +442,17 @@ const styles = StyleSheet.create({
     minWidth: 150,
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#182D24',
+    backgroundColor: appColors.cardAlt,
     borderWidth: 1,
-    borderColor: '#2A4A3D',
+    borderColor: appColors.panelBorder,
     gap: 4,
   },
   statValue: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 28,
   },
   statLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   primaryButton: {
     alignSelf: 'flex-start',
@@ -460,12 +461,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7EE081',
+    backgroundColor: appColors.primary,
     borderWidth: 1,
-    borderColor: '#A5F0AF',
+    borderColor: appColors.primaryBorder,
   },
   primaryButtonText: {
-    color: '#102218',
+    color: appColors.primaryText,
     fontSize: 15,
   },
   secondaryButton: {
@@ -473,39 +474,39 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#1D3A2E',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#4FAF7A',
+    borderColor: appColors.secondaryBorder,
   },
   secondaryButtonText: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
     fontSize: 14,
   },
   feedbackCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 10,
     alignItems: 'center',
   },
   feedbackText: {
-    color: '#A7C8B7',
+    color: appColors.mutedText,
     textAlign: 'center',
   },
   emptyTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
   },
   errorText: {
-    color: '#FF9B9B',
+    color: appColors.error,
   },
   routineCard: {
     borderRadius: 22,
     padding: 18,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 14,
   },
   routineCardPressed: {
@@ -526,15 +527,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   routineTitle: {
-    color: '#F1F7EE',
+    color: appColors.text,
     fontSize: 19,
   },
   routineDescription: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 20,
   },
   routineDescriptionMuted: {
-    color: '#7FA08E',
+    color: appColors.subtleText,
     fontStyle: 'italic',
   },
   routineStateBadge: {
@@ -545,21 +546,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   routineStateActive: {
-    backgroundColor: '#183524',
-    borderColor: '#4FAF7A',
+    backgroundColor: appColors.greenPanel,
+    borderColor: appColors.secondaryBorder,
   },
   routineStateDone: {
-    backgroundColor: '#233140',
-    borderColor: '#88B8FF',
+    backgroundColor: appColors.bluePanel,
+    borderColor: appColors.blueBorder,
   },
   routineStateText: {
     fontSize: 12,
   },
   routineStateTextActive: {
-    color: '#8DE2A8',
+    color: appColors.greenText,
   },
   routineStateTextDone: {
-    color: '#B4D4FF',
+    color: appColors.blueText,
   },
   routineMetaRow: {
     flexDirection: 'row',
@@ -569,10 +570,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   routineMetaText: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
   },
   routineMetaDivider: {
-    color: '#4D6B5D',
+    color: appColors.panelBorder,
   },
   tasksSection: {
     gap: 10,
@@ -581,9 +582,9 @@ const styles = StyleSheet.create({
   taskCard: {
     borderRadius: 16,
     padding: 14,
-    backgroundColor: '#1A2E25',
+    backgroundColor: appColors.panel,
     borderWidth: 1,
-    borderColor: '#2F5244',
+    borderColor: appColors.panelBorder,
     gap: 8,
   },
   taskCardPressed: {
@@ -600,23 +601,23 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     flexBasis: '100%',
-    color: '#F1F7EE',
+    color: appColors.text,
   },
   taskBadge: {
     alignSelf: 'flex-start',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#244338',
+    backgroundColor: appColors.cardBorder,
     maxWidth: '100%',
   },
   taskBadgeText: {
-    color: '#BFE7D2',
+    color: appColors.mutedText,
     fontSize: 12,
     flexShrink: 1,
   },
   taskDescription: {
-    color: '#A7C8B7',
+    color: appColors.softText,
     lineHeight: 20,
   },
   taskMetaRow: {
@@ -628,7 +629,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   taskMetaText: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     flexShrink: 1,
   },
   focusButton: {
@@ -637,18 +638,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#2B5642',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#7CCF96',
+    borderColor: appColors.secondaryBorder,
   },
   taskActionPressed: {
     opacity: 0.9,
   },
   focusButtonText: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
     fontSize: 14,
   },
   emptyTaskText: {
-    color: '#7FA08E',
+    color: appColors.subtleText,
   },
 });

@@ -18,6 +18,7 @@ import { useCountdownTimer } from '@/hooks/use-countdown-timer';
 import { FocusTreeVisual, type TreeStage } from '@/components/focus-tree-visual';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors, appSharedStyles } from '@/components/ui/app-theme';
 import { getUserIdFromToken } from '@/services/authStorage';
 import {
   completeFocusSession,
@@ -644,7 +645,7 @@ export default function FocusSessionScreen() {
             </ThemedText>
 
             {tasksLoading ? (
-              <ActivityIndicator size="small" color="#7EE081" />
+              <ActivityIndicator size="small" color={appColors.primary} />
             ) : !hasTasksAvailable ? (
               <View style={styles.emptyTaskState}>
                 <ThemedText type="defaultSemiBold" style={styles.emptyTaskStateTitle}>
@@ -845,7 +846,7 @@ export default function FocusSessionScreen() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color="#FFFFFF" />
+                        <ActivityIndicator color={appColors.dangerText} />
                       ) : (
                         <ThemedText type="defaultSemiBold" style={styles.endButtonText}>
                           {remainingSeconds > 0 ? 'End Session Early' : 'End Session'}
@@ -931,7 +932,7 @@ export default function FocusSessionScreen() {
                 disabled={!canStartSession}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={appColors.dangerText} />
                 ) : (
                   <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>
                     Start Session
@@ -950,8 +951,7 @@ export default function FocusSessionScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-    backgroundColor: '#0F1B16',
+    ...appSharedStyles.screen,
   },
   scrollContent: {
     flexGrow: 1,
@@ -961,9 +961,9 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 16,
@@ -976,10 +976,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   selectorTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   selectorSubtitle: {
-    color: '#98B7A7',
+    color: appColors.subtleText,
   },
   taskOptions: {
     gap: 10,
@@ -988,85 +988,85 @@ const styles = StyleSheet.create({
   emptyTaskState: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#355648',
-    backgroundColor: '#172923',
+    borderColor: appColors.inputBorder,
+    backgroundColor: appColors.panelSoft,
     padding: 16,
     gap: 6,
   },
   emptyTaskStateTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   emptyTaskStateText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   routineGroup: {
     gap: 8,
     backgroundColor: 'transparent',
   },
   routineGroupTitle: {
-    color: '#7FA08E',
+    color: appColors.subtleText,
     marginTop: 4,
   },
   optionCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#355648',
-    backgroundColor: '#172923',
+    borderColor: appColors.inputBorder,
+    backgroundColor: appColors.panelSoft,
     padding: 14,
     gap: 4,
   },
   optionCardSelected: {
-    borderColor: '#63C174',
-    backgroundColor: '#204736',
+    borderColor: appColors.selectedPanelBorder,
+    backgroundColor: appColors.selectedPanel,
   },
   optionCardPressed: {
     opacity: 0.92,
     transform: [{ scale: 0.99 }],
   },
   optionTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   optionText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   optionMeta: {
-    color: '#7EE081',
+    color: appColors.primary,
   },
   optionHelper: {
-    color: '#98B7A7',
+    color: appColors.subtleText,
   },
   title: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   subtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   infoPanel: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2B4A3E',
-    backgroundColor: '#1A2D26',
+    borderColor: appColors.panelBorder,
+    backgroundColor: appColors.panel,
     padding: 16,
     gap: 6,
   },
   infoLabel: {
-    color: '#98B7A7',
+    color: appColors.subtleText,
     textTransform: 'uppercase',
     fontSize: 12,
     letterSpacing: 0.5,
   },
   infoValue: {
-    color: '#EAF6F0',
+    color: appColors.text,
     fontSize: 18,
   },
   helperText: {
-    color: '#7FA08E',
+    color: appColors.subtleText,
   },
   treeHelperText: {
-    color: '#A7C8B7',
+    color: appColors.softText,
   },
   lifecycleText: {
-    color: '#F2C66D',
+    color: appColors.warningText,
   },
   statusBadge: {
     alignSelf: 'flex-start',
@@ -1077,46 +1077,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusBadgeActive: {
-    backgroundColor: '#163824',
-    borderColor: '#4FAF7A',
+    backgroundColor: appColors.greenPanel,
+    borderColor: appColors.secondaryBorder,
   },
   statusBadgeCompleted: {
-    backgroundColor: '#1D3140',
-    borderColor: '#6FB7FF',
+    backgroundColor: appColors.bluePanel,
+    borderColor: appColors.blueBorder,
   },
   statusBadgeInterrupted: {
-    backgroundColor: '#3D2718',
-    borderColor: '#F2C66D',
+    backgroundColor: appColors.warningSurface,
+    borderColor: appColors.warningBorder,
   },
   statusBadgeText: {
     fontSize: 12,
   },
   statusBadgeTextActive: {
-    color: '#8DE2A8',
+    color: appColors.greenText,
   },
   statusBadgeTextCompleted: {
-    color: '#A9D4FF',
+    color: appColors.blueText,
   },
   statusBadgeTextInterrupted: {
-    color: '#F2C66D',
+    color: appColors.warningText,
   },
   successPanel: {
     gap: 12,
     backgroundColor: 'transparent',
   },
   successTitle: {
-    color: '#7EE081',
+    color: appColors.success,
   },
   successStateText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   timerText: {
-    color: '#7EE081',
+    color: appColors.primary,
     fontSize: 20,
     fontWeight: '700',
   },
   successText: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   actions: {
     flexDirection: 'column',
@@ -1125,9 +1125,9 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
-    backgroundColor: '#7EE081',
+    backgroundColor: appColors.primary,
     borderWidth: 1,
-    borderColor: '#A5F0AF',
+    borderColor: appColors.primaryBorder,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -1137,41 +1137,41 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     width: '100%',
-    backgroundColor: '#1D3A2E',
+    backgroundColor: appColors.secondary,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#4FAF7A',
+    borderColor: appColors.secondaryBorder,
     minHeight: 46,
   },
   primaryButtonText: {
-    color: '#102218',
+    color: appColors.primaryText,
     fontSize: 14,
   },
   stopButton: {
     width: '100%',
-    backgroundColor: '#33414D',
+    backgroundColor: appColors.bluePanel,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#738291',
+    borderColor: appColors.blueBorder,
     minHeight: 46,
   },
   stopButtonText: {
-    color: '#FFFFFF',
+    color: appColors.secondaryText,
     fontSize: 14,
   },
   endButton: {
     width: '100%',
-    backgroundColor: '#B94A4A',
+    backgroundColor: appColors.danger,
     borderWidth: 1,
-    borderColor: '#E28787',
+    borderColor: appColors.dangerBorder,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -1180,11 +1180,11 @@ const styles = StyleSheet.create({
     minHeight: 46,
   },
   endButtonText: {
-    color: '#FFFFFF',
+    color: appColors.dangerText,
     fontSize: 14,
   },
   secondaryButtonText: {
-    color: '#F3FBF6',
+    color: appColors.secondaryText,
     fontSize: 14,
   },
   buttonPressed: {
@@ -1199,9 +1199,9 @@ const styles = StyleSheet.create({
   },
   actionStatusText: {
     width: '100%',
-    color: '#98B7A7',
+    color: appColors.subtleText,
   },
   errorText: {
-    color: '#FF8A8A',
+    color: appColors.error,
   },
 });

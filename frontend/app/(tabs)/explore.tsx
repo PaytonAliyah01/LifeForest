@@ -8,6 +8,7 @@ import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { clearToken, getUserIdFromToken } from '@/services/authStorage';
 import { getUserById, type User } from '@/services/usersApi';
 
@@ -100,7 +101,7 @@ export default function AccountScreen() {
 
         {loading ? (
           <ThemedView style={styles.loadingCard}>
-            <ActivityIndicator size="small" color="#4CAF50" />
+            <ActivityIndicator size="small" color={appColors.primary} />
             <ThemedText style={styles.loadingText}>Loading account data...</ThemedText>
           </ThemedView>
         ) : null}
@@ -156,7 +157,7 @@ export default function AccountScreen() {
                 disabled={loggingOut}
               >
                 {loggingOut ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color={appColors.dangerText} />
                 ) : (
                   <ThemedText type="defaultSemiBold" style={styles.logoutButtonText}>
                     Log Out
@@ -180,51 +181,51 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   heroTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
   },
   loadingCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   loadingText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   errorCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#2A1717',
+    backgroundColor: appColors.errorSurface,
     borderWidth: 1,
-    borderColor: '#6D2B2B',
+    borderColor: appColors.errorBorder,
     gap: 10,
   },
   errorTitle: {
-    color: '#FFD9D9',
+    color: appColors.errorTextStrong,
   },
   errorText: {
-    color: '#FFB6B6',
+    color: appColors.errorTextSoft,
   },
   sectionCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 12,
   },
   infoRow: {
@@ -232,30 +233,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   label: {
-    color: '#8EAA9B',
+    color: appColors.subtleText,
     fontSize: 13,
     textTransform: 'uppercase',
   },
   sessionText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 21,
   },
   secondaryButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EAF6EE',
-    borderColor: '#1E8E3E',
+    backgroundColor: appColors.ghostText,
+    borderColor: appColors.secondaryBorder,
     borderWidth: 1,
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   secondaryButtonText: {
-    color: '#1E8E3E',
+    color: appColors.secondaryBorder,
   },
   logoutButton: {
     marginTop: 6,
     alignSelf: 'flex-start',
-    backgroundColor: '#B63E3E',
+    backgroundColor: appColors.danger,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoutButtonText: {
-    color: '#FFFFFF',
+    color: appColors.dangerText,
   },
   buttonPressed: {
     opacity: 0.88,

@@ -51,6 +51,7 @@ jobs:
         if: steps.expo-check.outputs.configured == 'true'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
         run: npx eas-cli build --platform android --profile production --non-interactive --wait --json > eas-build-details.json
 
       - name: Print EAS build details

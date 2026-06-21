@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-lifeforest}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifeforest123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
 
@@ -21,11 +21,15 @@ services:
     environment:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-lifeforest}
       DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-lifeforest123}
-      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       DOWNLOAD_PAGE_TITLE: ${DOWNLOAD_PAGE_TITLE:-LifeForest}
-      DOWNLOAD_PAGE_DESCRIPTION: ${DOWNLOAD_PAGE_DESCRIPTION:-Download the latest Android APK for LifeForest.}
+      DOWNLOAD_PAGE_DESCRIPTION: ${DOWNLOAD_PAGE_DESCRIPTION:-Build routines, stay focused, reflect with intention, and turn steady progress into visible growth.}
       APK_DOWNLOAD_URL: ${APK_DOWNLOAD_URL:-}
+      DOWNLOAD_PAGE_CONTACT_EMAIL: ${DOWNLOAD_PAGE_CONTACT_EMAIL:-hello@lifeforest.app}
+      DOWNLOAD_PAGE_DEVELOPER_NAME: ${DOWNLOAD_PAGE_DEVELOPER_NAME:-LifeForest Developer}
+      DOWNLOAD_PAGE_DEVELOPER_BIO: ${DOWNLOAD_PAGE_DEVELOPER_BIO:-Elienne Phelipa is the developer behind LifeForest. The app grew out of reflection on previous semester projects, where lessons about scope management, sustained focus, feedback, and communication showed how much progress depends on structure and consistency. LifeForest brings those lessons into one mobile experience through routines, focus sessions, reflection, analytics, and visual forest growth.}
+      DOWNLOAD_PAGE_INSPIRATION: ${DOWNLOAD_PAGE_INSPIRATION:-LifeForest was inspired by the need for a productivity app that supports sustainable growth instead of short-term pressure. Drawing from previous project experience and research into habits, focus, gamification, and reflection, the app combines routine building, timed focus sessions, structured reflection, and visible tree growth so students and young professionals can see their consistency take shape over time.}
     ports:
       - "8080:8080"
 

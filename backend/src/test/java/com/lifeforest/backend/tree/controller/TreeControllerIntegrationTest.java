@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,7 @@ class TreeControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "forest-one@example.com")
     void getTreesByUserReturnsOnlyThatUsersForest() throws Exception {
         User firstUser = userRepository.save(User.builder()
                 .email("forest-one@example.com")
@@ -117,6 +119,7 @@ class TreeControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "forest-detail@example.com")
     void getTreeByIdReturnsTreeDetails() throws Exception {
         User user = userRepository.save(User.builder()
                 .email("forest-detail@example.com")

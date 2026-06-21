@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +67,7 @@ class AnalyticsControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "analytics@example.com")
     void getAnalyticsReturnsProductivityMetricsForUser() throws Exception {
         Instant recentSessionStart = Instant.now().minusSeconds(2 * 24 * 60 * 60L);
         Instant recentSessionEnd = recentSessionStart.plusSeconds(30 * 60L);
@@ -168,5 +170,32 @@ class AnalyticsControllerIntegrationTest {
                 .andExpect(jsonPath("$.reflectionsCount").value(1))
                 .andExpect(jsonPath("$.treesGrown").value(2))
                 .andExpect(jsonPath("$.damagedTrees").value(1));
+    }
+
+    @Test
+    @WithMockUser(username = "owner@example.com")
+    void getAnalyticsReturnsForbiddenForAnotherUsersId() throws Exception {
+        User owner = userRepository.save(User.builder()
+                .email("owner@example.com")
+                .passwordHash("hashed-password")
+                .displayName("Owner")
+                .routines(new HashSet<>())
+                .focusSessions(new HashSet<>())
+                .trees(new HashSet<>())
+                .reflections(new HashSet<>())
+                .build());
+
+        User otherUser = userRepository.save(User.builder()
+                .email("other@example.com")
+                .passwordHash("hashed-password")
+                .displayName("Other")
+                .routines(new HashSet<>())
+                .focusSessions(new HashSet<>())
+                .trees(new HashSet<>())
+                .reflections(new HashSet<>())
+                .build());
+
+        mockMvc.perform(get("/api/analytics").param("userId", String.valueOf(otherUser.getId())))
+                .andExpect(status().isForbidden());
     }
 }

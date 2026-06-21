@@ -1,5 +1,6 @@
 package com.lifeforest.backend.analytics.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.analytics.dto.response.AnalyticsResponseDto;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
@@ -25,9 +26,11 @@ public class AnalyticsService {
     private final FocusSessionRepository focusSessionRepository;
     private final ReflectionRepository reflectionRepository;
     private final TreeRepository treeRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional(readOnly = true)
     public AnalyticsResponseDto getProductivityMetrics(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 

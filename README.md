@@ -187,18 +187,98 @@ Required GitHub secrets:
 
 The smoke test downloads the APK from the URL you provide, uploads it to Maestro Cloud, and runs the `.maestro` flow tagged `smoke`.
 
-## VM download page
-Your backend can now serve a small APK landing page directly from the VM:
-- `GET /` shows the page
-- `GET /download` redirects to the APK URL
-- `GET /download/qr.svg` renders a QR code for the APK link
+## VM download website
+Your backend can now serve a small APK website directly from the VM:
+- `GET /` shows the homepage
+- `GET /about`, `/faq`, `/contact`, and `/developer` show the other site pages
+- `GET /download` shows the download page
+- `GET /download/apk` redirects to the real APK URL
+- `GET /download/qr.svg` renders a QR code for the protected download route
 
 Set these backend environment variables on the VM:
 - `DOWNLOAD_PAGE_TITLE`
 - `DOWNLOAD_PAGE_DESCRIPTION`
 - `APK_DOWNLOAD_URL`
+- `DOWNLOAD_PAGE_CONTACT_EMAIL`
+- `DOWNLOAD_PAGE_DEVELOPER_NAME`
+- `DOWNLOAD_PAGE_DEVELOPER_BIO`
+- `DOWNLOAD_PAGE_INSPIRATION`
 
-That means your VM can act as the public download page once you have a real APK link from EAS or GitHub Releases.
+That means your VM can act as the public app website once you have a real APK link from EAS or GitHub Releases.
+
+## Security notes for VM deployment
+- Change `POSTGRES_PASSWORD` to a strong password before deploying.
+- Change `JWT_SECRET` to a long random secret of at least 32 characters.
+- The database is now bound to `127.0.0.1:5432`, so it is reachable from the VM itself but no longer published publicly by Docker on all network interfaces.
+- The backend now requires a Bearer token for protected `/api/**` routes. Only the website pages, login, and user registration stay public.
+
+## CORS for development and deployment
+Browser CORS matters for:
+- Expo web
+- browser-based frontend testing
+- any web frontend hosted on a different origin than the backend
+
+Browser CORS does not matter for:
+- Expo Go on a phone
+- Android APK/native app requests
+
+This project now reads allowed browser origins from:
+- `APP_CORS_ALLOWED_ORIGINS`
+
+Example local value:
+```text
+APP_CORS_ALLOWED_ORIGINS=http://localhost:8081,http://127.0.0.1:8081,http://localhost:19006,http://127.0.0.1:19006
+```
+
+Example VM value if you host a separate web frontend later:
+```text
+APP_CORS_ALLOWED_ORIGINS=http://localhost:8081,http://127.0.0.1:8081,https://your-frontend-domain.example
+```
+
+## VM deployment checklist
+Use this checklist before or during a VM deploy:
+
+1. Update the VM `.env` file.
+2. Set a strong `POSTGRES_PASSWORD`.
+3. Set a strong `JWT_SECRET` with at least 32 random characters.
+4. Set `APK_DOWNLOAD_URL` to the current APK artifact URL if you want app downloads enabled.
+5. Set the website fields if needed:
+   `DOWNLOAD_PAGE_TITLE`
+   `DOWNLOAD_PAGE_DESCRIPTION`
+   `DOWNLOAD_PAGE_CONTACT_EMAIL`
+   `DOWNLOAD_PAGE_DEVELOPER_NAME`
+   `DOWNLOAD_PAGE_DEVELOPER_BIO`
+   `DOWNLOAD_PAGE_INSPIRATION`
+6. Review `APP_CORS_ALLOWED_ORIGINS`.
+   For Expo Go or APK-only use, the default local browser origins are usually enough.
+   If you later host a separate web frontend, add that exact HTTPS origin.
+7. Make sure EduCloud firewall/port forwarding only exposes what you really need.
+   Keep `8080` public only if you want the API/site reachable externally.
+   Do not expose Postgres publicly.
+8. Redeploy the backend:
+```bash
+cd /home/ubuntu
+./deploy-backend.sh
+```
+9. Restart the full stack if Compose environment values changed:
+```bash
+cd /home/ubuntu
+docker-compose up -d
+```
+10. Verify:
+```bash
+docker-compose ps
+docker-compose logs --tail=100 backend
+curl -I http://localhost:8080/
+```
+
+## Frontend and new backend security
+The frontend service layer already aligns well with the stricter backend security:
+- API requests automatically attach the Bearer token in [frontend/services/api.ts](frontend/services/api.ts)
+- user-scoped requests pass the `userId` decoded from that same JWT in [frontend/services/authStorage.ts](frontend/services/authStorage.ts)
+- backend ownership checks now verify that the authenticated user matches the requested user/resource
+
+That means even if someone tampers with `userId` on the client, the backend should reject access to another user’s data.
 
 ## Push images to Docker Hub
 Use your Docker Hub username `tiffanyphelipa` when tagging the images:

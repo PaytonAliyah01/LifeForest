@@ -7,6 +7,7 @@ import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { getAnalyticsByUser, type Analytics } from '@/services/analyticsApi';
 import { getUserIdFromToken } from '@/services/authStorage';
 
@@ -91,27 +92,27 @@ export default function AnalyticsScreen() {
       {
         label: 'Productivity Score',
         value: `${analytics.productivityScore}/100`,
-        accent: '#7EE081',
+        accent: appColors.primary,
       },
       {
         label: 'Completion Rate',
         value: `${analytics.completionRate}%`,
-        accent: '#9EDCFF',
+        accent: appColors.accentBlue,
       },
       {
         label: 'Average Focus',
         value: `${analytics.averageFocusLevel}/5`,
-        accent: '#F0D58A',
+        accent: appColors.accentGold,
       },
       {
         label: 'Focus Time',
         value: formatMinutes(analytics.totalFocusMinutes),
-        accent: '#E9B97A',
+        accent: appColors.accentAmber,
       },
       {
         label: 'Estimation Accuracy',
         value: `${analytics.estimationAccuracyPercentage}%`,
-        accent: '#F2A8FF',
+        accent: appColors.accentPink,
       },
     ];
   }, [analytics]);
@@ -162,7 +163,7 @@ export default function AnalyticsScreen() {
 
         {loading ? (
           <ThemedView style={styles.feedbackCard}>
-            <ActivityIndicator size="small" color="#7EE081" />
+            <ActivityIndicator size="small" color={appColors.primary} />
             <ThemedText style={styles.feedbackText}>Loading analytics...</ThemedText>
           </ThemedView>
         ) : null}
@@ -351,78 +352,78 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   heroTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
   },
   feedbackCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   feedbackText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   errorCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#2A1717',
+    backgroundColor: appColors.errorSurface,
     borderWidth: 1,
-    borderColor: '#6D2B2B',
+    borderColor: appColors.errorBorder,
     gap: 10,
   },
   errorTitle: {
-    color: '#FFD9D9',
+    color: appColors.errorTextStrong,
   },
   errorText: {
-    color: '#FFB6B6',
+    color: appColors.errorTextSoft,
   },
   secondaryButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EAF6EE',
-    borderColor: '#1E8E3E',
+    backgroundColor: appColors.ghostText,
+    borderColor: appColors.secondaryBorder,
     borderWidth: 1,
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   secondaryButtonText: {
-    color: '#1E8E3E',
+    color: appColors.secondaryBorder,
   },
   emptyCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 10,
   },
   emptyTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   emptyText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 21,
   },
   scoreCard: {
     borderRadius: 22,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
   },
   scoreHeader: {
     flexDirection: 'row',
@@ -438,10 +439,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   sectionTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   sectionSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 21,
   },
   scoreBadge: {
@@ -449,18 +450,18 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: '#1B3028',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#3A654F',
+    borderColor: appColors.secondaryBorder,
     alignItems: 'center',
     gap: 2,
   },
   scoreBadgeValue: {
-    color: '#7EE081',
+    color: appColors.primary,
     fontSize: 28,
   },
   scoreBadgeLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     textTransform: 'uppercase',
     fontSize: 11,
     letterSpacing: 0.7,
@@ -469,9 +470,9 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 22,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 14,
   },
   weeklyHeader: {
@@ -492,18 +493,18 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#1B3028',
+    backgroundColor: appColors.secondary,
     borderWidth: 1,
-    borderColor: '#3A654F',
+    borderColor: appColors.secondaryBorder,
     alignItems: 'center',
     gap: 2,
   },
   weeklyBadgeValue: {
-    color: '#7EE081',
+    color: appColors.primary,
     fontSize: 24,
   },
   weeklyBadgeLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     textTransform: 'uppercase',
     fontSize: 11,
     letterSpacing: 0.7,
@@ -513,14 +514,14 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: '#21392F',
+    backgroundColor: appColors.progressTrack,
     borderWidth: 1,
-    borderColor: '#305446',
+    borderColor: appColors.progressTrackBorder,
   },
   progressFill: {
     height: '100%',
     borderRadius: 999,
-    backgroundColor: '#7EE081',
+    backgroundColor: appColors.primary,
   },
   weeklyMetaRow: {
     flexDirection: 'row',
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   weeklyMetaText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     flexShrink: 1,
   },
   cardGrid: {
@@ -548,16 +549,16 @@ const styles = StyleSheet.create({
     minWidth: 170,
     borderRadius: 18,
     padding: 18,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   metricValue: {
     fontSize: 26,
   },
   metricLabel: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     flexShrink: 1,
   },
   detailCard: {
@@ -565,9 +566,9 @@ const styles = StyleSheet.create({
     minWidth: 280,
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 12,
   },
   detailRow: {
@@ -578,11 +579,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   detailLabel: {
-    color: '#8FB4A2',
+    color: appColors.subtleText,
     flex: 1,
   },
   detailValue: {
-    color: '#F1F7EE',
+    color: appColors.text,
     textAlign: 'right',
   },
 });

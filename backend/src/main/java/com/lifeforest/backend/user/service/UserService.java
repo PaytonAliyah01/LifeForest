@@ -1,5 +1,6 @@
 package com.lifeforest.backend.user.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.user.domain.User;
 import com.lifeforest.backend.user.dto.request.UserCreateRequestDto;
 import com.lifeforest.backend.user.dto.request.UserUpdateRequestDto;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public UserResponseDto register(UserCreateRequestDto dto){
@@ -40,13 +42,12 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserResponseDto> getAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toResponseDto)
-                .toList();
+        return List.of(userMapper.toResponseDto(authenticatedUserService.getCurrentUser()));
     }
 
     @Transactional(readOnly = true)
     public UserResponseDto getById(Long id){
+        authenticatedUserService.assertCanAccessUserId(id);
         User user = userRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new UserNotFoundException(id));
 
@@ -55,6 +56,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto update(Long id, UserUpdateRequestDto dto){
+        authenticatedUserService.assertCanAccessUserId(id);
         User user = userRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new UserNotFoundException(id));
         
@@ -66,6 +68,7 @@ public class UserService {
 
     @Transactional
     public void delete(Long id) {
+        authenticatedUserService.assertCanAccessUserId(id);
         User user = userRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new UserNotFoundException(id));
         userRepository.delete(Objects.requireNonNull(user, "user"));

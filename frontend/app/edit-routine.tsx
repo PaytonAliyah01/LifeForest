@@ -5,17 +5,19 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
-  TextInput,
   View,
 } from 'react-native';
 import { isAxiosError } from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/app-button';
+import { AppCard } from '@/components/ui/app-card';
+import { AppTextField } from '@/components/ui/app-text-field';
+import { appColors, appSharedStyles } from '@/components/ui/app-theme';
+import { InfoPanel } from '@/components/ui/info-panel';
 import { deleteRoutineById, updateRoutineById } from '@/services/routinesApi';
 
 const parseCompletedParam = (value: string | string[] | undefined): boolean => {
@@ -151,7 +153,7 @@ export default function EditRoutineScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={appSharedStyles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={24}
     >
@@ -161,91 +163,74 @@ export default function EditRoutineScreen() {
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
-        <ThemedView style={styles.card}>
-          <ThemedText type="title" style={styles.title}>
+        <AppCard style={styles.card}>
+          <ThemedText type="title" style={appSharedStyles.title}>
             Edit Routine
           </ThemedText>
-          <ThemedText type="default" style={styles.subtitle}>
+          <ThemedText type="default" style={appSharedStyles.subtitle}>
             Update the details for this routine.
           </ThemedText>
 
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
+          <View style={appSharedStyles.form}>
+            <AppTextField
               placeholder="Title"
-              placeholderTextColor="#7A7A7A"
               value={title}
               onChangeText={setTitle}
             />
 
-            <TextInput
-              style={[styles.input, styles.textArea]}
+            <AppTextField
+              style={styles.textArea}
               placeholder="Description (optional)"
-              placeholderTextColor="#7A7A7A"
               multiline
               numberOfLines={4}
-              textAlignVertical="top"
+              multilineHeight={110}
               value={description}
               onChangeText={setDescription}
             />
 
-            <ThemedView style={styles.switchRow}>
+            <InfoPanel
+              title="Mark as completed"
+              helper="Toggle this when the routine is finished."
+            >
+              <View style={styles.switchRow}>
               <View style={styles.switchLabelGroup}>
                 <ThemedText type="defaultSemiBold" style={styles.switchLabel}>
-                  Mark as completed
+                  Status
                 </ThemedText>
-                <ThemedText style={styles.helperText}>
-                  Toggle this when the routine is finished.
+                <ThemedText style={appSharedStyles.helperText}>
+                  {completed ? 'This routine is marked complete.' : 'This routine is still active.'}
                 </ThemedText>
               </View>
               <Switch
                 value={completed}
                 onValueChange={setCompleted}
-                trackColor={{ false: '#49635A', true: '#63C174' }}
+                trackColor={{ false: '#49635A', true: appColors.selectedPanelBorder }}
                 thumbColor="#FFFFFF"
               />
-            </ThemedView>
+              </View>
+            </InfoPanel>
 
             <View style={styles.actions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryButton,
-                  pressed && styles.buttonPressed,
-                  (loading || deleting) && styles.buttonDisabled,
-                ]}
+              <AppButton
+                label="Cancel"
+                variant="secondary"
                 onPress={() => router.back()}
                 disabled={loading || deleting}
-              >
-                <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
-                  Cancel
-                </ThemedText>
-              </Pressable>
+                style={styles.actionButton}
+              />
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed && styles.buttonPressed,
-                  (!canSave || loading || deleting) && styles.buttonDisabled,
-                ]}
+              <AppButton
+                label="Save Changes"
                 onPress={() => void handleSave()}
+                loading={loading}
                 disabled={!canSave || loading || deleting}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <ThemedText type="defaultSemiBold" style={styles.primaryButtonText}>
-                    Save Changes
-                  </ThemedText>
-                )}
-              </Pressable>
+                style={styles.actionButton}
+              />
             </View>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.buttonPressed,
-                (loading || deleting) && styles.buttonDisabled,
-              ]}
+            <AppButton
+              label="Add Task"
+              variant="secondary"
               onPress={() =>
                 router.push({
                   pathname: '/add-task',
@@ -256,82 +241,32 @@ export default function EditRoutineScreen() {
                 })
               }
               disabled={loading || deleting}
-            >
-              <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>
-                Add Task
-              </ThemedText>
-            </Pressable>
+            />
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.deleteButton,
-                pressed && styles.buttonPressed,
-                (loading || deleting) && styles.buttonDisabled,
-              ]}
+            <AppButton
+              label="Delete Routine"
               onPress={confirmDelete}
+              loading={deleting}
               disabled={loading || deleting}
-            >
-              {deleting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <ThemedText type="defaultSemiBold" style={styles.deleteButtonText}>
-                  Delete Routine
-                </ThemedText>
-              )}
-            </Pressable>
+              style={styles.deleteButton}
+            />
 
-            {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
+            {errorMessage ? <ThemedText style={appSharedStyles.errorText}>{errorMessage}</ThemedText> : null}
           </View>
-        </ThemedView>
+        </AppCard>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0F1B16',
-  },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    ...appSharedStyles.scrollContent,
     paddingTop: 24,
     paddingHorizontal: 24,
-    paddingBottom: 72,
   },
-  card: {
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: '#14251F',
-    borderWidth: 1,
-    borderColor: '#244338',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
-  },
-  title: {
-    color: '#EAF6F0',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#B7CCC2',
-    marginBottom: 20,
-  },
-  form: {
-    gap: 14,
-  },
+  card: {},
   input: {
-    backgroundColor: '#20352D',
-    color: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#355648',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
   },
   textArea: {
     minHeight: 110,
@@ -341,12 +276,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
-    backgroundColor: '#1A2D26',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#2B4A3E',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: 'transparent',
   },
   switchLabelGroup: {
     flex: 1,
@@ -354,10 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   switchLabel: {
-    color: '#EAF6F0',
-  },
-  helperText: {
-    color: '#98B7A7',
+    color: appColors.text,
   },
   actions: {
     flexDirection: 'row',
@@ -365,57 +292,12 @@ const styles = StyleSheet.create({
     marginTop: 6,
     backgroundColor: 'transparent',
   },
-  primaryButton: {
+  actionButton: {
     flex: 1,
-    backgroundColor: '#7EE081',
-    borderWidth: 1,
-    borderColor: '#A5F0AF',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#1D3A2E',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#4FAF7A',
-  },
-  primaryButtonText: {
-    color: '#102218',
-    fontSize: 15,
-  },
-  secondaryButtonText: {
-    color: '#F3FBF6',
-    fontSize: 15,
   },
   deleteButton: {
-    backgroundColor: '#B94A4A',
-    borderWidth: 1,
-    borderColor: '#E28787',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: appColors.danger,
+    borderColor: appColors.dangerBorder,
     marginTop: 4,
-  },
-  deleteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-  },
-  buttonPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  errorText: {
-    color: '#FF8A8A',
-    marginTop: 8,
   },
 });

@@ -7,6 +7,7 @@ import { ForestHeaderArt } from '@/components/forest-header-art';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { appColors } from '@/components/ui/app-theme';
 import { getAchievementsByUser, type Achievement, type AchievementsSummary } from '@/services/achievementsApi';
 import { getUserIdFromToken } from '@/services/authStorage';
 
@@ -19,11 +20,11 @@ const achievementCategoryLabels: Record<string, string> = {
 };
 
 const achievementCategoryColors: Record<string, string> = {
-  ROUTINES: '#9EDCFF',
-  FOCUS: '#F1C96B',
-  FOREST: '#7EE081',
-  REFLECTION: '#F2A8FF',
-  MINUTES: '#E9B97A',
+  ROUTINES: appColors.accentBlue,
+  FOCUS: appColors.accentGold,
+  FOREST: appColors.primary,
+  REFLECTION: appColors.accentPink,
+  MINUTES: appColors.accentAmber,
 };
 
 export default function AchievementsScreen() {
@@ -106,8 +107,8 @@ export default function AchievementsScreen() {
             {
               width: `${achievement.progressPercentage}%`,
               backgroundColor: achievement.unlocked
-                ? '#7EE081'
-                : achievementCategoryColors[achievement.category] ?? '#F1C96B',
+                ? appColors.primary
+                : achievementCategoryColors[achievement.category] ?? appColors.accentGold,
             },
           ]}
         />
@@ -192,7 +193,7 @@ export default function AchievementsScreen() {
 
         {loading ? (
           <ThemedView style={styles.loadingCard}>
-            <ActivityIndicator size="small" color="#4CAF50" />
+            <ActivityIndicator size="small" color={appColors.primary} />
             <ThemedText style={styles.loadingText}>Loading achievements...</ThemedText>
           </ThemedView>
         ) : null}
@@ -290,56 +291,56 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 24,
     padding: 24,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 8,
   },
   heroTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   heroSubtitle: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 22,
   },
   loadingCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   loadingText: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
   },
   errorCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#2A1717',
+    backgroundColor: appColors.errorSurface,
     borderWidth: 1,
-    borderColor: '#6D2B2B',
+    borderColor: appColors.errorBorder,
     gap: 10,
   },
   errorTitle: {
-    color: '#FFD9D9',
+    color: appColors.errorTextStrong,
   },
   errorText: {
-    color: '#FFB6B6',
+    color: appColors.errorTextSoft,
   },
   secondaryButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EAF6EE',
-    borderColor: '#1E8E3E',
+    backgroundColor: appColors.ghostText,
+    borderColor: appColors.secondaryBorder,
     borderWidth: 1,
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   secondaryButtonText: {
-    color: '#1E8E3E',
+    color: appColors.secondaryBorder,
   },
   statsRow: {
     flexDirection: 'row',
@@ -352,28 +353,28 @@ const styles = StyleSheet.create({
     minWidth: 150,
     borderRadius: 16,
     padding: 16,
-    backgroundColor: '#1B3028',
+    backgroundColor: appColors.cardAlt,
     borderWidth: 1,
-    borderColor: '#2A4A3D',
+    borderColor: appColors.panelBorder,
     gap: 6,
   },
   statNumber: {
-    color: '#7EE081',
+    color: appColors.primary,
   },
   statLabel: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     flexShrink: 1,
   },
   sectionCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
     borderWidth: 1,
-    borderColor: '#244338',
+    borderColor: appColors.cardBorder,
     gap: 12,
   },
   sectionTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
   },
   achievementList: {
     gap: 12,
@@ -389,12 +390,12 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   achievementCardUnlocked: {
-    backgroundColor: '#1A3425',
-    borderColor: '#3E7F58',
+    backgroundColor: appColors.greenPanel,
+    borderColor: appColors.secondaryBorder,
   },
   achievementCardLocked: {
-    backgroundColor: '#1B3028',
-    borderColor: '#2A4A3D',
+    backgroundColor: appColors.cardAlt,
+    borderColor: appColors.panelBorder,
   },
   achievementCardHeader: {
     flexDirection: 'row',
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   achievementTitle: {
-    color: '#EAF6F0',
+    color: appColors.text,
     flex: 1,
   },
   achievementCategoryPill: {
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    backgroundColor: '#14251F',
+    backgroundColor: appColors.card,
   },
   achievementCategoryText: {
     fontSize: 12,
@@ -430,26 +431,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   achievementStateUnlocked: {
-    backgroundColor: '#234631',
-    borderColor: '#4D9F6D',
+    backgroundColor: appColors.selectedPanel,
+    borderColor: appColors.selectedPanelBorder,
   },
   achievementStateLocked: {
-    backgroundColor: '#3A311C',
-    borderColor: '#8C7230',
+    backgroundColor: appColors.warningSurface,
+    borderColor: appColors.warningBorder,
   },
   achievementStateText: {
-    color: '#F3F7F4',
+    color: appColors.secondaryText,
     fontSize: 12,
   },
   achievementDescription: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     lineHeight: 20,
   },
   progressBarTrack: {
     height: 10,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: '#0E1914',
+    backgroundColor: appColors.screen,
   },
   progressBarFill: {
     height: '100%',
@@ -463,11 +464,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   progressLabel: {
-    color: '#D7E8DE',
+    color: appColors.text,
     fontSize: 13,
   },
   progressPercentLabel: {
-    color: '#B7CCC2',
+    color: appColors.mutedText,
     fontSize: 13,
   },
 });

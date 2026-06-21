@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.routine.domain.Routine;
 import com.lifeforest.backend.routine.repository.RoutineRepository;
 import com.lifeforest.backend.task.domain.Task;
@@ -38,13 +39,16 @@ class TaskServiceTest {
     @Mock
     private RoutineRepository routineRepository;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private final TaskMapper taskMapper = new TaskMapper();
 
     private TaskService taskService;
 
     @BeforeEach
     void setUp() {
-        taskService = new TaskService(taskRepository, routineRepository, taskMapper);
+        taskService = new TaskService(taskRepository, routineRepository, taskMapper, authenticatedUserService);
     }
 
     @Test

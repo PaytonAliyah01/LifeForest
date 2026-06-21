@@ -1,5 +1,6 @@
 package com.lifeforest.backend.tree.service;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.exception.FocusSessionNotFoundException;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
@@ -34,6 +35,7 @@ public class TreeService {
     private final TreeRepository treeRepository;
     private final UserRepository userRepository;
     private final FocusSessionRepository focusSessionRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
     public Tree create(Tree tree) {
@@ -90,25 +92,30 @@ public class TreeService {
 
     @Transactional(readOnly = true)
     public List<Tree> getAll() {
-        return treeRepository.findAll();
+        return getAllByUser(authenticatedUserService.getCurrentUser().getId());
     }
 
     @Transactional(readOnly = true)
     public List<Tree> getAllByUser(Long userId) {
+        authenticatedUserService.assertCanAccessUserId(userId);
         loadUser(userId);
         return treeRepository.findAllByUserId(userId);
     }
 
     @Transactional(readOnly = true)
     public Tree getById(Long treeId) {
-        return loadTree(treeId);
+        Tree tree = loadTree(treeId);
+        authenticatedUserService.assertCanAccessTree(tree);
+        return tree;
     }
 
     @Transactional(readOnly = true)
     public Tree getByFocusSession(Long focusSessionId) {
         loadFocusSession(focusSessionId);
-        return treeRepository.findByFocusSessionId(focusSessionId)
+        Tree tree = treeRepository.findByFocusSessionId(focusSessionId)
                 .orElseThrow(() -> new TreeNotFoundException(focusSessionId));
+        authenticatedUserService.assertCanAccessTree(tree);
+        return tree;
     }
 
     @Transactional
@@ -134,6 +141,7 @@ public class TreeService {
     @Transactional
     public void delete(Long treeId) {
         Tree tree = loadTree(treeId);
+        authenticatedUserService.assertCanAccessTree(tree);
         treeRepository.delete(Objects.requireNonNull(tree, TREE));
     }
 

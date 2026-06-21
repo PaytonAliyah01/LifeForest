@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.user.domain.User;
 import com.lifeforest.backend.user.domain.UserRole;
 import com.lifeforest.backend.user.dto.request.UserCreateRequestDto;
@@ -35,13 +36,16 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private AuthenticatedUserService authenticatedUserService;
+
     private final UserMapper userMapper = new UserMapper();
 
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, userMapper, passwordEncoder);
+        userService = new UserService(userRepository, userMapper, passwordEncoder, authenticatedUserService);
     }
 
     @Test
