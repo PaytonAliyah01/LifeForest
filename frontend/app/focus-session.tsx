@@ -446,7 +446,7 @@ export default function FocusSessionScreen() {
 
     reset(timerDurationSeconds);
     start();
-  }, [reset, session?.id, session?.completed, session?.interrupted, start, stop, timerDurationSeconds]);
+  }, [reset, session, session?.id, session?.completed, session?.interrupted, start, stop, timerDurationSeconds]);
 
   useEffect(() => {
     if (
@@ -493,7 +493,14 @@ export default function FocusSessionScreen() {
 
     const outcome = session.interrupted ? 'interrupted' : 'completed';
     openReflectionScreen(session, outcome);
-  }, [hasReflection, openReflectionScreen, session]);
+  }, [
+    hasReflection,
+    openReflectionScreen,
+    session,
+    session?.completed,
+    session?.id,
+    session?.interrupted,
+  ]);
 
   const formattedCompletedDuration = useMemo(() => {
     if (session?.duration == null) {

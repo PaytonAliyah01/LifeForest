@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -266,8 +265,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {},
-  input: {
-  },
   textArea: {
     minHeight: 110,
   },

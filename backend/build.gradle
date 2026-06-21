@@ -67,6 +67,16 @@ tasks.named('jacocoTestReport') {
     }
 }
 
+tasks.register('prepareSonarLibraries', Copy) {
+    from(configurations.runtimeClasspath)
+    into(layout.buildDirectory.dir('sonar-libs/main'))
+}
+
+tasks.register('prepareSonarTestLibraries', Copy) {
+    from(configurations.testRuntimeClasspath)
+    into(layout.buildDirectory.dir('sonar-libs/test'))
+}
+
 tasks.named('bootJar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

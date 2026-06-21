@@ -19,7 +19,7 @@ import { AppTextField } from '@/components/ui/app-text-field';
 import { ThemedText } from '@/components/themed-text';
 import { createTask, type RepeatDay, type TaskCategory, type TaskType } from '@/services/tasksApi';
 
-const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
+const TASK_CATEGORY_OPTIONS: { value: TaskCategory; label: string }[] = [
   { value: 'GENERAL', label: 'General' },
   { value: 'WORK', label: 'Work' },
   { value: 'STUDY', label: 'Study' },
@@ -27,7 +27,7 @@ const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
   { value: 'CREATIVE', label: 'Creative' },
 ];
 
-const TASK_TYPE_OPTIONS: Array<{ value: TaskType; label: string; helper: string }> = [
+const TASK_TYPE_OPTIONS: { value: TaskType; label: string; helper: string }[] = [
   {
     value: 'ONE_TIME',
     label: 'One-time',
@@ -40,7 +40,7 @@ const TASK_TYPE_OPTIONS: Array<{ value: TaskType; label: string; helper: string 
   },
 ];
 
-const REPEAT_DAY_OPTIONS: Array<{ value: RepeatDay; label: string }> = [
+const REPEAT_DAY_OPTIONS: { value: RepeatDay; label: string }[] = [
   { value: 'MONDAY', label: 'Mon' },
   { value: 'TUESDAY', label: 'Tue' },
   { value: 'WEDNESDAY', label: 'Wed' },

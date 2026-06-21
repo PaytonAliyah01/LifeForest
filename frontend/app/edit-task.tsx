@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -27,7 +26,7 @@ import {
   type TaskType,
 } from '@/services/tasksApi';
 
-const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
+const TASK_CATEGORY_OPTIONS: { value: TaskCategory; label: string }[] = [
   { value: 'GENERAL', label: 'General' },
   { value: 'WORK', label: 'Work' },
   { value: 'STUDY', label: 'Study' },
@@ -35,7 +34,7 @@ const TASK_CATEGORY_OPTIONS: Array<{ value: TaskCategory; label: string }> = [
   { value: 'CREATIVE', label: 'Creative' },
 ];
 
-const TASK_TYPE_OPTIONS: Array<{ value: TaskType; label: string; helper: string }> = [
+const TASK_TYPE_OPTIONS: { value: TaskType; label: string; helper: string }[] = [
   {
     value: 'ONE_TIME',
     label: 'One-time',
@@ -48,7 +47,7 @@ const TASK_TYPE_OPTIONS: Array<{ value: TaskType; label: string; helper: string 
   },
 ];
 
-const REPEAT_DAY_OPTIONS: Array<{ value: RepeatDay; label: string }> = [
+const REPEAT_DAY_OPTIONS: { value: RepeatDay; label: string }[] = [
   { value: 'MONDAY', label: 'Mon' },
   { value: 'TUESDAY', label: 'Tue' },
   { value: 'WEDNESDAY', label: 'Wed' },
@@ -141,7 +140,7 @@ export default function EditTaskScreen() {
   const [taskType, setTaskType] = useState<TaskType>(initialTaskType);
   const [repeatDays, setRepeatDays] = useState<RepeatDay[]>(initialRepeatDays);
   const [preferredTime, setPreferredTime] = useState(initialPreferredTime);
-  const [completed, setCompleted] = useState(initialCompleted);
+  const [completed] = useState(initialCompleted);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');

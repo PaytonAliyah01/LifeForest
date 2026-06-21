@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew assemble
 
       - name: Upload backend build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: backend-build-artifacts
           path: backend/build/libs/*.jar
@@ -71,7 +71,7 @@ jobs:
 
       - name: Upload OWASP Dependency-Check report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: backend-owasp-dependency-check
           path: backend/build/reports/dependency-check-report.*
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload frontend dependency audit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: frontend-npm-audit
           path: frontend/npm-audit.json
@@ -183,7 +183,7 @@ jobs:
 
       - name: Generate backend coverage report
         working-directory: backend
-        run: ./gradlew test jacocoTestReport
+        run: ./gradlew test jacocoTestReport prepareSonarLibraries prepareSonarTestLibraries
 
       - name: Run SonarQube analysis
         uses: SonarSource/sonarqube-scan-action@v5.1.0
