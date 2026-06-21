@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -12,43 +11,12 @@ import {
 import { isAxiosError } from 'axios';
 
 import { api } from '@/services/api';
+import { TaskFormFields } from '@/components/task-form-fields';
 import { AppButton } from '@/components/ui/app-button';
 import { AppCard } from '@/components/ui/app-card';
 import { appSharedStyles } from '@/components/ui/app-theme';
-import { AppTextField } from '@/components/ui/app-text-field';
 import { ThemedText } from '@/components/themed-text';
 import { createTask, type RepeatDay, type TaskCategory, type TaskType } from '@/services/tasksApi';
-
-const TASK_CATEGORY_OPTIONS: { value: TaskCategory; label: string }[] = [
-  { value: 'GENERAL', label: 'General' },
-  { value: 'WORK', label: 'Work' },
-  { value: 'STUDY', label: 'Study' },
-  { value: 'HEALTH', label: 'Health' },
-  { value: 'CREATIVE', label: 'Creative' },
-];
-
-const TASK_TYPE_OPTIONS: { value: TaskType; label: string; helper: string }[] = [
-  {
-    value: 'ONE_TIME',
-    label: 'One-time',
-    helper: 'Completes after one finished focus session.',
-  },
-  {
-    value: 'REPEATING',
-    label: 'Repeating',
-    helper: 'Can keep giving you a new tree each session.',
-  },
-];
-
-const REPEAT_DAY_OPTIONS: { value: RepeatDay; label: string }[] = [
-  { value: 'MONDAY', label: 'Mon' },
-  { value: 'TUESDAY', label: 'Tue' },
-  { value: 'WEDNESDAY', label: 'Wed' },
-  { value: 'THURSDAY', label: 'Thu' },
-  { value: 'FRIDAY', label: 'Fri' },
-  { value: 'SATURDAY', label: 'Sat' },
-  { value: 'SUNDAY', label: 'Sun' },
-];
 
 const parseTextParam = (value: string | string[] | undefined): string => {
   const rawValue = Array.isArray(value) ? value[0] : value;
@@ -77,14 +45,6 @@ export default function AddTaskScreen() {
   const durationInputRef = useRef<TextInput | null>(null);
 
   const canCreate = Number.isFinite(routineId) && title.trim().length > 0;
-
-  const toggleRepeatDay = (day: RepeatDay) => {
-    setRepeatDays((currentDays) =>
-      currentDays.includes(day)
-        ? currentDays.filter((currentDay) => currentDay !== day)
-        : [...currentDays, day],
-    );
-  };
 
   const handleCreateTask = async () => {
     if (!canCreate) {
@@ -174,151 +134,28 @@ export default function AddTaskScreen() {
           </ThemedText>
 
           <View style={appSharedStyles.form}>
-            <AppTextField
-              testID="add-task-title-input"
-              placeholder="Task title"
-              value={title}
-              onChangeText={setTitle}
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => descriptionInputRef.current?.focus()}
+            <TaskFormFields
+              title={title}
+              onChangeTitle={setTitle}
+              description={description}
+              onChangeDescription={setDescription}
+              duration={duration}
+              onChangeDuration={setDuration}
+              category={category}
+              onChangeCategory={setCategory}
+              taskType={taskType}
+              onChangeTaskType={setTaskType}
+              repeatDays={repeatDays}
+              onChangeRepeatDays={setRepeatDays}
+              preferredTime={preferredTime}
+              onChangePreferredTime={setPreferredTime}
+              onSubmit={handleCreateTask}
+              descriptionInputRef={descriptionInputRef}
+              durationInputRef={durationInputRef}
+              titleTestID="add-task-title-input"
+              descriptionTestID="add-task-description-input"
+              durationTestID="add-task-duration-input"
             />
-
-            <AppTextField
-              ref={descriptionInputRef}
-              testID="add-task-description-input"
-              style={styles.textArea}
-              placeholder="Description (optional)"
-              multiline
-              numberOfLines={4}
-              multilineHeight={110}
-              value={description}
-              onChangeText={setDescription}
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => durationInputRef.current?.focus()}
-            />
-
-            <AppTextField
-              ref={durationInputRef}
-              testID="add-task-duration-input"
-              placeholder="Duration in minutes (optional)"
-              keyboardType="number-pad"
-              value={duration}
-              onChangeText={setDuration}
-              returnKeyType="done"
-              onSubmitEditing={() => void handleCreateTask()}
-            />
-
-            <View style={styles.categorySection}>
-              <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
-                Task category
-              </ThemedText>
-              <View style={styles.categoryOptions}>
-                {TASK_CATEGORY_OPTIONS.map((option) => (
-                  <Pressable
-                    key={option.value}
-                    style={({ pressed }) => [
-                      styles.categoryChip,
-                      category === option.value && styles.categoryChipSelected,
-                      pressed && styles.buttonPressed,
-                    ]}
-                    onPress={() => setCategory(option.value)}
-                  >
-                    <ThemedText
-                      type="defaultSemiBold"
-                      style={[
-                        styles.categoryChipText,
-                        category === option.value && styles.categoryChipTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.categorySection}>
-              <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
-                Task type
-              </ThemedText>
-              <View style={styles.typeOptions}>
-                {TASK_TYPE_OPTIONS.map((option) => {
-                  const selected = taskType === option.value;
-
-                  return (
-                    <Pressable
-                      key={option.value}
-                      style={({ pressed }) => [
-                        styles.typeCard,
-                        selected && styles.typeCardSelected,
-                        pressed && styles.buttonPressed,
-                      ]}
-                      onPress={() => setTaskType(option.value)}
-                    >
-                      <ThemedText
-                        type="defaultSemiBold"
-                        style={[styles.typeCardTitle, selected && styles.typeCardTitleSelected]}
-                      >
-                        {option.label}
-                      </ThemedText>
-                      <ThemedText
-                        style={[styles.typeCardHelper, selected && styles.typeCardHelperSelected]}
-                      >
-                        {option.helper}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-
-            {taskType === 'REPEATING' ? (
-              <>
-                <View style={styles.categorySection}>
-                  <ThemedText type="defaultSemiBold" style={styles.categoryLabel}>
-                    Repeat on
-                  </ThemedText>
-                  <ThemedText style={appSharedStyles.helperText}>
-                    Leave all days empty if this habit should be due every day.
-                  </ThemedText>
-                  <View style={styles.categoryOptions}>
-                    {REPEAT_DAY_OPTIONS.map((option) => {
-                      const selected = repeatDays.includes(option.value);
-
-                      return (
-                        <Pressable
-                          key={option.value}
-                          style={({ pressed }) => [
-                            styles.categoryChip,
-                            selected && styles.categoryChipSelected,
-                            pressed && styles.buttonPressed,
-                          ]}
-                          onPress={() => toggleRepeatDay(option.value)}
-                        >
-                          <ThemedText
-                            type="defaultSemiBold"
-                            style={[
-                              styles.categoryChipText,
-                              selected && styles.categoryChipTextSelected,
-                            ]}
-                          >
-                            {option.label}
-                          </ThemedText>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                <AppTextField
-                  placeholder="Preferred time (for example 07:30 or Evening)"
-                  value={preferredTime}
-                  onChangeText={setPreferredTime}
-                />
-              </>
-            ) : null}
 
             <View style={styles.actions}>
               <AppButton
@@ -354,65 +191,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {},
-  textArea: {
-    minHeight: 110,
-  },
-  categorySection: {
-    gap: 10,
-  },
-  categoryLabel: {
-    color: '#EAF6F0',
-  },
-  categoryOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  typeOptions: {
-    gap: 10,
-  },
-  categoryChip: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#355648',
-    backgroundColor: '#1A2D26',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  categoryChipSelected: {
-    borderColor: '#63C174',
-    backgroundColor: '#234233',
-  },
-  categoryChipText: {
-    color: '#B7CCC2',
-  },
-  categoryChipTextSelected: {
-    color: '#EAF6F0',
-  },
-  typeCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#355648',
-    backgroundColor: '#1A2D26',
-    padding: 14,
-    gap: 4,
-  },
-  typeCardSelected: {
-    borderColor: '#63C174',
-    backgroundColor: '#234233',
-  },
-  typeCardTitle: {
-    color: '#EAF6F0',
-  },
-  typeCardTitleSelected: {
-    color: '#F5FFF7',
-  },
-  typeCardHelper: {
-    color: '#98B7A7',
-  },
-  typeCardHelperSelected: {
-    color: '#CFE7D7',
-  },
   actions: {
     flexDirection: 'row',
     gap: 12,
@@ -420,9 +198,5 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-  },
-  buttonPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
   },
 });
