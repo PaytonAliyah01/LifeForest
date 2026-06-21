@@ -34,12 +34,6 @@ public class FocusSessionService {
     private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
-    public FocusSession create(FocusSession focusSession) {
-        FocusSession sessionToSave = prepareSession(focusSession);
-        return focusSessionRepository.save(Objects.requireNonNull(sessionToSave, FOCUS_SESSION));
-    }
-
-    @Transactional
     public FocusSession start(Long userId, Long taskId) {
         authenticatedUserService.assertCanAccessUserId(userId);
         User user = loadUser(userId);
@@ -137,64 +131,15 @@ public class FocusSessionService {
     }
 
     @Transactional
-    public FocusSession update(Long focusSessionId, FocusSession focusSession) {
-        FocusSession existingSession = loadFocusSession(focusSessionId);
-        User user = resolveUser(focusSession);
-        Task task = resolveTask(focusSession);
-
-        existingSession.setUser(user);
-        existingSession.setTask(task);
-        existingSession.setTreeType(focusSession.getTreeType());
-        existingSession.setStartedAt(focusSession.getStartedAt());
-        existingSession.setEndedAt(focusSession.getEndedAt());
-        existingSession.setDuration(focusSession.getDuration());
-        existingSession.setCompleted(focusSession.isCompleted());
-        existingSession.setInterrupted(focusSession.isInterrupted());
-
-        validateTaskOwnership(user, task);
-
-        return focusSessionRepository.save(existingSession);
-    }
-
-    @Transactional
     public void delete(Long focusSessionId) {
         FocusSession focusSession = loadFocusSession(focusSessionId);
         authenticatedUserService.assertCanAccessFocusSession(focusSession);
         focusSessionRepository.delete(Objects.requireNonNull(focusSession, FOCUS_SESSION));
     }
 
-    private FocusSession prepareSession(FocusSession focusSession) {
-        FocusSession session = Objects.requireNonNull(focusSession, FOCUS_SESSION);
-        User user = resolveUser(session);
-        Task task = resolveTask(session);
-
-        session.setUser(user);
-        session.setTask(task);
-        validateTaskOwnership(user, task);
-
-        return session;
-    }
-
     private FocusSession loadFocusSession(Long focusSessionId) {
         return focusSessionRepository.findById(Objects.requireNonNull(focusSessionId, "focusSessionId"))
                 .orElseThrow(() -> new FocusSessionNotFoundException(focusSessionId));
-    }
-
-    private User resolveUser(FocusSession focusSession) {
-        Long userId = Objects.requireNonNull(
-                Objects.requireNonNull(focusSession.getUser(), "focusSession.user").getId(),
-                "focusSession.user.id"
-        );
-
-        return loadUser(userId);
-    }
-
-    private Task resolveTask(FocusSession focusSession) {
-        if (focusSession.getTask() == null || focusSession.getTask().getId() == null) {
-            return null;
-        }
-
-        return loadTask(focusSession.getTask().getId());
     }
 
     private User loadUser(Long userId) {

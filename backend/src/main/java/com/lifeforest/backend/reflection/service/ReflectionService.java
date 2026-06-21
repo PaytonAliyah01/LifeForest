@@ -31,12 +31,6 @@ public class ReflectionService {
     private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
-    public Reflection create(Reflection reflection) {
-        Reflection reflectionToSave = prepareReflection(reflection);
-        return reflectionRepository.save(Objects.requireNonNull(reflectionToSave, REFLECTION));
-    }
-
-    @Transactional
     public Reflection create(Long userId, ReflectionCreateRequestDto dto) {
         authenticatedUserService.assertCanAccessUserId(userId);
         User user = loadUser(Objects.requireNonNull(userId, "userId"));
@@ -76,61 +70,15 @@ public class ReflectionService {
     }
 
     @Transactional
-    public Reflection update(Long reflectionId, Reflection reflection) {
-        Reflection existingReflection = loadReflection(reflectionId);
-        User user = resolveUser(reflection);
-        FocusSession focusSession = resolveFocusSession(reflection);
-
-        existingReflection.setUser(user);
-        existingReflection.setFocusSession(focusSession);
-        existingReflection.setContent(reflection.getContent());
-        existingReflection.setFocusLevel(reflection.getFocusLevel());
-        existingReflection.setDistractions(reflection.getDistractions());
-
-        validateFocusSessionOwnership(user, focusSession);
-
-        return reflectionRepository.save(existingReflection);
-    }
-
-    @Transactional
     public void delete(Long reflectionId) {
         Reflection reflection = loadReflection(reflectionId);
         authenticatedUserService.assertCanAccessReflection(reflection);
         reflectionRepository.delete(Objects.requireNonNull(reflection, REFLECTION));
     }
 
-    private Reflection prepareReflection(Reflection reflection) {
-        Reflection reflectionToPrepare = Objects.requireNonNull(reflection, REFLECTION);
-        User user = resolveUser(reflectionToPrepare);
-        FocusSession focusSession = resolveFocusSession(reflectionToPrepare);
-
-        reflectionToPrepare.setUser(user);
-        reflectionToPrepare.setFocusSession(focusSession);
-        validateFocusSessionOwnership(user, focusSession);
-
-        return reflectionToPrepare;
-    }
-
     private Reflection loadReflection(Long reflectionId) {
         return reflectionRepository.findById(Objects.requireNonNull(reflectionId, "reflectionId"))
                 .orElseThrow(() -> new ReflectionNotFoundException(reflectionId));
-    }
-
-    private User resolveUser(Reflection reflection) {
-        Long userId = Objects.requireNonNull(
-                Objects.requireNonNull(reflection.getUser(), "reflection.user").getId(),
-                "reflection.user.id"
-        );
-
-        return loadUser(userId);
-    }
-
-    private FocusSession resolveFocusSession(Reflection reflection) {
-        if (reflection.getFocusSession() == null || reflection.getFocusSession().getId() == null) {
-            return null;
-        }
-
-        return loadFocusSession(reflection.getFocusSession().getId());
     }
 
     private User loadUser(Long userId) {

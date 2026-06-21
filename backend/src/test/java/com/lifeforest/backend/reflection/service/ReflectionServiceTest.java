@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.lifeforest.backend.common.security.AuthenticatedUserService;
 import com.lifeforest.backend.focussession.domain.FocusSession;
 import com.lifeforest.backend.focussession.repository.FocusSessionRepository;
-import com.lifeforest.backend.reflection.domain.Reflection;
 import com.lifeforest.backend.reflection.dto.request.ReflectionCreateRequestDto;
 import com.lifeforest.backend.reflection.mapper.ReflectionMapper;
 import com.lifeforest.backend.reflection.repository.ReflectionRepository;
@@ -54,32 +53,32 @@ class ReflectionServiceTest {
     }
 
     @Test
-    void createResolvesUserAndFocusSessionBeforeSaving() {
+    void createFromDtoResolvesUserAndFocusSessionBeforeSaving() {
         User user = User.builder().id(4L).build();
         FocusSession focusSession = FocusSession.builder()
                 .id(9L)
                 .user(user)
                 .build();
-        Reflection reflection = Reflection.builder()
-                .user(User.builder().id(4L).build())
-                .focusSession(FocusSession.builder().id(9L).build())
-                .content("I stayed focused and calm.")
-                .focusLevel(4)
-                .distractions("Phone notifications")
-                .build();
+        ReflectionCreateRequestDto dto = new ReflectionCreateRequestDto(
+                4L,
+                9L,
+                "I stayed focused and calm.",
+                4,
+                "Phone notifications"
+        );
 
         when(userRepository.findById(4L)).thenReturn(Optional.of(user));
         when(focusSessionRepository.findById(9L)).thenReturn(Optional.of(focusSession));
-        when(reflectionRepository.save(reflection)).thenReturn(reflection);
+        when(reflectionRepository.save(org.mockito.ArgumentMatchers.any(com.lifeforest.backend.reflection.domain.Reflection.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Reflection result = reflectionService.create(reflection);
+        com.lifeforest.backend.reflection.domain.Reflection result = reflectionService.create(4L, dto);
 
-        assertSame(reflection, result);
         assertSame(user, result.getUser());
         assertSame(focusSession, result.getFocusSession());
         assertEquals(4, result.getFocusLevel());
         assertEquals("Phone notifications", result.getDistractions());
-        verify(reflectionRepository).save(reflection);
+        verify(reflectionRepository).save(org.mockito.ArgumentMatchers.any(com.lifeforest.backend.reflection.domain.Reflection.class));
     }
 
     @Test
@@ -99,10 +98,10 @@ class ReflectionServiceTest {
 
         when(userRepository.findById(4L)).thenReturn(Optional.of(user));
         when(focusSessionRepository.findById(9L)).thenReturn(Optional.of(focusSession));
-        when(reflectionRepository.save(org.mockito.ArgumentMatchers.any(Reflection.class)))
+        when(reflectionRepository.save(org.mockito.ArgumentMatchers.any(com.lifeforest.backend.reflection.domain.Reflection.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Reflection result = reflectionService.create(4L, dto);
+        com.lifeforest.backend.reflection.domain.Reflection result = reflectionService.create(4L, dto);
 
         assertSame(user, result.getUser());
         assertSame(focusSession, result.getFocusSession());
@@ -119,19 +118,19 @@ class ReflectionServiceTest {
                 .id(9L)
                 .user(actualOwner)
                 .build();
-        Reflection reflection = Reflection.builder()
-                .user(User.builder().id(4L).build())
-                .focusSession(FocusSession.builder().id(9L).build())
-                .content("Ownership should be validated.")
-                .focusLevel(3)
-                .distractions("Open tabs")
-                .build();
+        ReflectionCreateRequestDto dto = new ReflectionCreateRequestDto(
+                4L,
+                9L,
+                "Ownership should be validated.",
+                3,
+                "Open tabs"
+        );
 
         when(userRepository.findById(4L)).thenReturn(Optional.of(selectedUser));
         when(focusSessionRepository.findById(9L)).thenReturn(Optional.of(focusSession));
 
         IllegalArgumentException exception =
-                assertThrows(IllegalArgumentException.class, () -> reflectionService.create(reflection));
+                assertThrows(IllegalArgumentException.class, () -> reflectionService.create(4L, dto));
 
         assertEquals("Focus session does not belong to the selected user.", exception.getMessage());
     }

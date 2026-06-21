@@ -1,6 +1,5 @@
 package com.lifeforest.backend.reflection.controller;
 
-import com.lifeforest.backend.reflection.domain.Reflection;
 import com.lifeforest.backend.reflection.dto.request.ReflectionCreateRequestDto;
 import com.lifeforest.backend.reflection.dto.response.ReflectionResponseDto;
 import com.lifeforest.backend.reflection.mapper.ReflectionMapper;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,11 +55,6 @@ public class ReflectionController {
     @GetMapping("/{id}")
     public ReflectionResponseDto getReflectionById(@PathVariable Long id) {
         return reflectionMapper.toResponseDto(reflectionService.getById(id));
-    }
-
-    @PutMapping("/{id}")
-    public ReflectionResponseDto updateReflection(@PathVariable Long id, @RequestBody Reflection reflection) {
-        return reflectionMapper.toResponseDto(reflectionService.update(id, reflection));
     }
 
     @DeleteMapping("/{id}")
