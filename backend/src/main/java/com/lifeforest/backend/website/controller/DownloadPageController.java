@@ -341,10 +341,13 @@ public class DownloadPageController {
                     .page-header {
                       margin-bottom: 28px;
                     }
+                    .page > section + section {
+                      margin-top: 24px;
+                    }
                     .hero {
                       display: grid;
                       grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
-                      gap: 20px;
+                      gap: 24px;
                       align-items: stretch;
                     }
                     .hero-copy,
@@ -447,7 +450,7 @@ public class DownloadPageController {
                     .section-grid {
                       display: grid;
                       grid-template-columns: repeat(3, minmax(0, 1fr));
-                      gap: 18px;
+                      gap: 24px;
                     }
                     .section-grid-two {
                       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -458,12 +461,12 @@ public class DownloadPageController {
                     }
                     .faq-list {
                       display: grid;
-                      gap: 16px;
+                      gap: 20px;
                     }
                     .download-layout {
                       display: grid;
                       grid-template-columns: repeat(2, minmax(0, 1fr));
-                      gap: 18px;
+                      gap: 24px;
                     }
                     .qr-panel {
                       text-align: center;
