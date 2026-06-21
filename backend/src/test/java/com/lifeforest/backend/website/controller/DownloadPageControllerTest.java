@@ -26,7 +26,7 @@ import com.lifeforest.backend.common.security.SecurityConfig;
 @Import({SecurityConfig.class, DownloadPageControllerTest.TestSecurityBeans.class})
 @TestPropertySource(properties = {
         "app.download-page.title=LifeForest",
-        "app.download-page.description=Build steady habits, stay focused, and grow your forest one session at a time.",
+        "app.download-page.description=Build routines, stay focused, reflect with intention, and turn steady progress into visible growth.",
         "app.download-page.apk-url=https://example.com/lifeforest.apk",
         "app.download-page.contact-email=hello@lifeforest.app",
         "app.download-page.developer-name=Payton",

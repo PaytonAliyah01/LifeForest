@@ -45,81 +45,35 @@ public class DownloadPageController {
     @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String home() {
-        String body = """
-                <section class="hero">
-                  <div class="hero-copy">
-                    <span class="eyebrow">Habit tracker + focus companion</span>
-                    <h1>Build a calmer daily rhythm with %s.</h1>
-                    <p class="hero-text">%s</p>
-                    <div class="hero-actions">
-                      <a class="button button-primary" href="/download">Download the App</a>
-                      <a class="button button-secondary" href="/about">How It Works</a>
-                    </div>
-                  </div>
-                  <div class="hero-panel">
-                    <div class="mini-stat">
-                      <strong>Today first</strong>
-                      <span>See habits due today, streaks, and quick check-offs.</span>
-                    </div>
-                    <div class="mini-stat">
-                      <strong>Focused sessions</strong>
-                      <span>Turn intentional work blocks into visible growth in your forest.</span>
-                    </div>
-                    <div class="mini-stat">
-                      <strong>Real reflection</strong>
-                      <span>Capture how sessions felt so your routine gets smarter over time.</span>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="section-grid">
-                  <article class="info-card">
-                    <h2>Habits that feel alive</h2>
-                    <p>LifeForest helps you track repeating habits, one-time goals, focus time, reflections, and consistency in one place.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Growth you can see</h2>
-                    <p>Completed focus sessions grow trees, interrupted ones leave damage, and your forest becomes a visual record of momentum.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Built for Android</h2>
-                    <p>Install the latest APK from this site, then log in and start shaping your habit system on your phone.</p>
-                  </article>
-                </section>
-
-                <section class="section-grid section-grid-two">
-                  <article class="info-card">
-                    <h2>Quick tour of the site</h2>
-                    <p><strong>About:</strong> learn what LifeForest is trying to solve and how habits, focus, and reflection work together.</p>
-                    <p><strong>FAQ:</strong> find answers about installation, the APK, and how the app behaves.</p>
-                    <p><strong>Contact:</strong> get help with setup, bugs, or project questions.</p>
-                    <p><strong>Developer:</strong> read about the person behind the app and the thinking behind the project.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>About the developer</h2>
-                    <p><strong>%s</strong></p>
-                    <p>%s</p>
-                    <p><a class="inline-link" href="/developer">Read the full developer page</a></p>
-                  </article>
-                </section>
-
-                <section class="section-grid section-grid-two">
-                  <article class="info-card">
-                    <h2>What inspired the app</h2>
-                    <p>%s</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Why that matters</h2>
-                    <p>That inspiration shapes the whole product: the app tries to make discipline feel more supportive through habit check-offs, focus sessions, reflection, and forest growth instead of only pressure and task lists.</p>
-                  </article>
-                </section>
-                """.formatted(
-                escapeHtml(pageTitle),
-                escapeHtml(pageDescription),
-                escapeHtml(developerName),
-                escapeHtml(developerBio),
-                escapeHtml(inspirationText)
-        );
+        String body = heroSection() +
+                sectionGrid("section-grid",
+                        infoCard("Habits that feel alive",
+                                "LifeForest helps you track repeating habits, one-time goals, focus time, reflections, and consistency in one place."),
+                        infoCard("Growth you can see",
+                                "Completed focus sessions grow trees, interrupted ones leave damage, and your forest becomes a visual record of momentum."),
+                        infoCard("Built for Android",
+                                "Install the latest APK from this site, then log in and start shaping your habit system on your phone.")
+                ) +
+                sectionGrid("section-grid section-grid-two",
+                        infoCard("Quick tour of the site",
+                                "<strong>About:</strong> learn what LifeForest is trying to solve and how habits, focus, and reflection work together.",
+                                "<strong>FAQ:</strong> find answers about installation, the APK, and how the app behaves.",
+                                "<strong>Contact:</strong> get help with setup, bugs, or project questions.",
+                                "<strong>Developer:</strong> read about the person behind the app and the thinking behind the project."),
+                        infoCard(
+                                "About the developer",
+                                "<strong>%s</strong>".formatted(escapeHtml(developerName)),
+                                escapeHtml(developerBio),
+                                "<a class=\"inline-link\" href=\"/developer\">Read the full developer page</a>"
+                        )
+                ) +
+                sectionGrid("section-grid section-grid-two",
+                        infoCard("What inspired the app", escapeHtml(inspirationText)),
+                        infoCard(
+                                "Why that matters",
+                                "That inspiration shapes the whole product: the app tries to make discipline feel more supportive through habit check-offs, focus sessions, reflection, and forest growth instead of only pressure and task lists."
+                        )
+                );
 
         return renderPage("Home", body);
     }
@@ -127,39 +81,24 @@ public class DownloadPageController {
     @GetMapping(value = "/about", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String about() {
-        String body = """
-                <section class="page-header">
-                  <span class="eyebrow">About LifeForest</span>
-                  <h1>A habit tracker designed around consistency, not clutter.</h1>
-                  <p>%s</p>
-                </section>
-
-                <section class="section-grid">
-                  <article class="info-card">
-                    <h2>Today view first</h2>
-                    <p>The app brings today’s habits forward so the main action is showing up for what matters right now.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Focus supports habits</h2>
-                    <p>Focus sessions are there to help you complete meaningful work, not replace your day-to-day rhythm.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Forest as feedback</h2>
-                    <p>Your forest grows from completed effort, giving your consistency a visible reward over days, weeks, and months.</p>
-                  </article>
-                </section>
-
-                <section class="section-grid section-grid-two">
-                  <article class="info-card">
-                    <h2>Inspiration</h2>
-                    <p>%s</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Design direction</h2>
-                    <p>The app aims to feel calmer and more motivating than a standard tracker by treating progress as something you grow, reflect on, and return to daily.</p>
-                  </article>
-                </section>
-                """.formatted(escapeHtml(pageDescription), escapeHtml(inspirationText));
+        String body = pageHeader(
+                "About LifeForest",
+                "A habit tracker designed around consistency, not clutter.",
+                escapeHtml(pageDescription)
+        ) +
+                sectionGrid("section-grid",
+                        infoCard("Today view first",
+                                "The app brings today’s habits forward so the main action is showing up for what matters right now."),
+                        infoCard("Focus supports habits",
+                                "Focus sessions are there to help you complete meaningful work, not replace your day-to-day rhythm."),
+                        infoCard("Forest as feedback",
+                                "Your forest grows from completed effort, giving your consistency a visible reward over days, weeks, and months.")
+                ) +
+                sectionGrid("section-grid section-grid-two",
+                        infoCard("Inspiration", escapeHtml(inspirationText)),
+                        infoCard("Design direction",
+                                "The app aims to feel calmer and more motivating than a standard tracker by treating progress as something you grow, reflect on, and return to daily.")
+                );
 
         return renderPage("About", body);
     }
@@ -167,33 +106,28 @@ public class DownloadPageController {
     @GetMapping(value = "/faq", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String faq() {
-        String body = """
-                <section class="page-header">
-                  <span class="eyebrow">FAQ</span>
-                  <h1>Questions people usually ask before downloading.</h1>
-                </section>
-
-                <section class="faq-list">
-                  %s
-                </section>
-                """.formatted(
-                faqItem(
+        String body = pageHeader(
+                "FAQ",
+                "Questions people usually ask before downloading.",
+                ""
+        ) +
+                wrapSection("faq-list",
+                        faqItem(
                         "What is LifeForest?",
                         "LifeForest is a habit tracker with focus sessions, reflections, analytics, and a forest that grows from completed work."
                 ) +
-                faqItem(
+                        faqItem(
                         "How do I install it?",
                         "Open the download page on this site, tap the download button or scan the QR code, then install the Android APK on your phone."
                 ) +
-                faqItem(
+                        faqItem(
                         "Does this page expose the raw APK host?",
                         "No. The public site sends downloads through a server-side route, so visitors do not need the direct file URL."
                 ) +
-                faqItem(
+                        faqItem(
                         "Do I need an internet connection?",
                         "You need internet to reach the backend and sync data, especially if your backend is hosted remotely on your VM."
-                )
-        );
+                ));
 
         return renderPage("FAQ", body);
     }
@@ -201,24 +135,18 @@ public class DownloadPageController {
     @GetMapping(value = "/contact", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String contact() {
-        String body = """
-                <section class="page-header">
-                  <span class="eyebrow">Contact</span>
-                  <h1>Need help, feedback, or project information?</h1>
-                  <p>Reach out if you have installation issues, questions about the habit tracker, or feedback about the experience.</p>
-                </section>
-
-                <section class="section-grid section-grid-two">
-                  <article class="info-card">
-                    <h2>Email</h2>
-                    <p><a class="inline-link" href="mailto:%s">%s</a></p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Best topics to send</h2>
-                    <p>Download support, APK install issues, account questions, bug reports, and general project feedback.</p>
-                  </article>
-                </section>
-                """.formatted(escapeHtml(contactEmail), escapeHtml(contactEmail));
+        String escapedEmail = escapeHtml(contactEmail);
+        String body = pageHeader(
+                "Contact",
+                "Need help, feedback, or project information?",
+                "Reach out if you have installation issues, questions about the habit tracker, or feedback about the experience."
+        ) +
+                sectionGrid("section-grid section-grid-two",
+                        infoCard("Email",
+                                "<a class=\"inline-link\" href=\"mailto:%s\">%s</a>".formatted(escapedEmail, escapedEmail)),
+                        infoCard("Best topics to send",
+                                "Download support, APK install issues, account questions, bug reports, and general project feedback.")
+                );
 
         return renderPage("Contact", body);
     }
@@ -226,44 +154,27 @@ public class DownloadPageController {
     @GetMapping(value = "/developer", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String developer() {
-        String body = """
-                <section class="page-header">
-                  <span class="eyebrow">Developer</span>
-                  <h1>Meet the developer behind %s.</h1>
-                  <p>This page gives a little more context about the person, motivation, and project direction behind the app.</p>
-                </section>
-
-                <section class="section-grid section-grid-two">
-                  <article class="info-card">
-                    <h2>Developer</h2>
-                    <p><strong>%s</strong></p>
-                    <p>%s</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Project focus</h2>
-                    <p>LifeForest is centered on helping people build a daily rhythm through habits, focus sessions, reflections, analytics, and a forest that reflects consistency over time.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Why this app exists</h2>
-                    <p>The goal is to make habit tracking feel more motivating and more human by combining structure, reflection, and visual growth instead of only checklists.</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Inspiration behind LifeForest</h2>
-                    <p>%s</p>
-                  </article>
-                  <article class="info-card">
-                    <h2>Get in touch</h2>
-                    <p>If you want to ask a question, report a bug, or share feedback, you can reach the developer at <a class="inline-link" href="mailto:%s">%s</a>.</p>
-                  </article>
-                </section>
-                """.formatted(
-                escapeHtml(pageTitle),
-                escapeHtml(developerName),
-                escapeHtml(developerBio),
-                escapeHtml(inspirationText),
-                escapeHtml(contactEmail),
-                escapeHtml(contactEmail)
-        );
+        String escapedTitle = escapeHtml(pageTitle);
+        String escapedDeveloperName = escapeHtml(developerName);
+        String escapedDeveloperBio = escapeHtml(developerBio);
+        String escapedInspiration = escapeHtml(inspirationText);
+        String escapedEmail = escapeHtml(contactEmail);
+        String body = pageHeader(
+                "Developer",
+                "Meet the developer behind %s.".formatted(escapedTitle),
+                "This page gives a little more context about the person, motivation, and project direction behind the app."
+        ) +
+                sectionGrid("section-grid section-grid-two",
+                        infoCard("Developer", "<strong>%s</strong>".formatted(escapedDeveloperName), escapedDeveloperBio),
+                        infoCard("Project focus",
+                                "LifeForest is centered on helping people build a daily rhythm through habits, focus sessions, reflections, analytics, and a forest that reflects consistency over time."),
+                        infoCard("Why this app exists",
+                                "The goal is to make habit tracking feel more motivating and more human by combining structure, reflection, and visual growth instead of only checklists."),
+                        infoCard("Inspiration behind LifeForest", escapedInspiration),
+                        infoCard("Get in touch",
+                                "If you want to ask a question, report a bug, or share feedback, you can reach the developer at <a class=\"inline-link\" href=\"mailto:%s\">%s</a>."
+                                        .formatted(escapedEmail, escapedEmail))
+                );
 
         return renderPage("Developer", body);
     }
@@ -272,37 +183,18 @@ public class DownloadPageController {
     @ResponseBody
     public String downloadPage() {
         String actionSection = apkDownloadUrl.isBlank()
-                ? """
-                    <div class="info-card">
-                      <h2>Download not configured yet</h2>
-                      <p>The APK link has not been connected on this server yet. Please check back after deployment is updated.</p>
-                    </div>
-                    """
-                : """
-                    <div class="download-layout">
-                      <div class="info-card">
-                        <h2>Get the latest Android build</h2>
-                        <p>Use the button below to start the download from the server’s secure app route.</p>
-                        <a class="button button-primary" href="/download/apk">Download APK</a>
-                        <p class="muted compact">The direct APK storage URL is kept behind the server redirect.</p>
-                      </div>
-                      <div class="info-card qr-panel">
-                        <h2>Scan on your phone</h2>
-                        <img class="qr-image" src="/download/qr.svg" alt="QR code to open the LifeForest download page" />
-                        <p class="muted compact">This QR code opens the server download route on your phone.</p>
-                      </div>
-                    </div>
-                    """;
+                ? infoCard("Download not configured yet",
+                "The APK link has not been connected on this server yet. Please check back after deployment is updated.")
+                : sectionGrid("download-layout",
+                downloadCard(),
+                qrCard()
+        );
 
-        String body = """
-                <section class="page-header">
-                  <span class="eyebrow">Download</span>
-                  <h1>Install LifeForest on Android.</h1>
-                  <p>Everything starts here: download the app, install it on your phone, and begin building your habit forest.</p>
-                </section>
-
-                %s
-                """.formatted(actionSection);
+        String body = pageHeader(
+                "Download",
+                "Install LifeForest on Android.",
+                "Everything starts here: download the app, install it on your phone, and begin building your habit forest."
+        ) + actionSection;
 
         return renderPage("Download", body);
     }
@@ -683,6 +575,100 @@ public class DownloadPageController {
         }
 
         return markup.toString();
+    }
+
+    private String heroSection() {
+        return """
+                <section class="hero">
+                  <div class="hero-copy">
+                    <span class="eyebrow">Habit tracker + focus companion</span>
+                    <h1>Build a calmer daily rhythm with %s.</h1>
+                    <p class="hero-text">%s</p>
+                    <div class="hero-actions">
+                      <a class="button button-primary" href="/download">Download the App</a>
+                      <a class="button button-secondary" href="/about">How It Works</a>
+                    </div>
+                  </div>
+                  <div class="hero-panel">
+                    %s
+                  </div>
+                </section>
+                """.formatted(
+                escapeHtml(pageTitle),
+                escapeHtml(pageDescription),
+                miniStat("Today first", "See habits due today, streaks, and quick check-offs.") +
+                        miniStat("Focused sessions", "Turn intentional work blocks into visible growth in your forest.") +
+                        miniStat("Real reflection", "Capture how sessions felt so your routine gets smarter over time.")
+        );
+    }
+
+    private String pageHeader(String eyebrow, String title, String description) {
+        String descriptionMarkup = description.isBlank() ? "" : "<p>%s</p>".formatted(description);
+        return """
+                <section class="page-header">
+                  <span class="eyebrow">%s</span>
+                  <h1>%s</h1>
+                  %s
+                </section>
+                """.formatted(eyebrow, title, descriptionMarkup);
+    }
+
+    private String sectionGrid(String cssClasses, String... content) {
+        return wrapSection(cssClasses, String.join("", content));
+    }
+
+    private String wrapSection(String cssClasses, String content) {
+        return """
+                <section class="%s">
+                  %s
+                </section>
+                """.formatted(cssClasses, content);
+    }
+
+    private String infoCard(String title, String... paragraphs) {
+        StringBuilder markup = new StringBuilder("""
+                <article class="info-card">
+                  <h2>%s</h2>
+                """.formatted(title));
+
+        for (String paragraph : paragraphs) {
+            markup.append("<p>")
+                    .append(paragraph)
+                    .append("</p>");
+        }
+
+        markup.append("</article>");
+        return markup.toString();
+    }
+
+    private String miniStat(String title, String text) {
+        return """
+                <div class="mini-stat">
+                  <strong>%s</strong>
+                  <span>%s</span>
+                </div>
+                """.formatted(title, text);
+    }
+
+    private String downloadCard() {
+        return """
+                <div class="info-card">
+                  <h2>Get the latest Android build</h2>
+                  <p>Use the button below to start the download from the server’s secure app route.</p>
+                  <a class="button button-primary" href="/download/apk">Download APK</a>
+                  <p class="muted compact">The direct APK storage URL is kept behind the server redirect.</p>
+                </div>
+                """;
+    }
+
+    private String qrCard() {
+        return """
+                <div class="info-card qr-panel">
+                  <h2>Scan on your phone</h2>
+                  <img class="qr-image" src="/download/qr.svg" alt="QR code to open the LifeForest download page" />
+                  <p class="muted compact">This QR code opens the server download route on your phone.</p>
+                </div>
+                """;
     }
 
     private String faqItem(String question, String answer) {
