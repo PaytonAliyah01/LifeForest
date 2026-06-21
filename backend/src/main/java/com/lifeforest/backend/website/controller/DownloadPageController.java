@@ -30,7 +30,7 @@ public class DownloadPageController {
     @Value("${app.download-page.apk-url:}")
     private String apkDownloadUrl;
 
-    @Value("${app.download-page.contact-email:hello@lifeforest.app}")
+    @Value("${app.download-page.contact-email:elienne.tiffany@gmail.com}")
     private String contactEmail;
 
     @Value("${app.download-page.developer-name:LifeForest Developer}")
